@@ -1,9 +1,7 @@
 G-Locate
 ===========
 
-An app that measures how many people there are at places, equipped with filters to find where your friends are. This project has been built to meet the requirements of UCLA's CS M117 class. This is the Android Studio version of the project. 
-
-NOTE: As of 18th November 2014, we are migrating to Android Studio for improved workflow. Files in Eclipse may not be in sync with Android Studio version, and may after some time be considered obsolete.
+An app that measures how many people there are at places, equipped with filters to find where your friends are. This project has been built to meet the requirements of UCLA's CS M117 class. 
 
 #Motivation
 
