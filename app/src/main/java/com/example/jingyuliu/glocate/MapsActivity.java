@@ -6,7 +6,14 @@ import android.os.Bundle;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.CircleOptions;
 import com.google.android.gms.maps.model.MarkerOptions;
+import com.google.android.gms.maps.CameraUpdateFactory;
+import com.google.android.gms.maps.CameraUpdate;
+import android.content.Context;
+import android.location.Criteria;
+import android.location.Location;
+import android.location.LocationManager;
 
 public class MapsActivity extends FragmentActivity {
 
@@ -18,6 +25,16 @@ public class MapsActivity extends FragmentActivity {
         setContentView(R.layout.activity_maps);
         setUpMapIfNeeded();
         mMap.setMyLocationEnabled(true);
+        Criteria criteria = new Criteria();
+        LocationManager locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
+        String provider = locationManager.getBestProvider(criteria, false);
+        Location location = locationManager.getLastKnownLocation(provider);
+        double lat =  location.getLatitude();
+        double lng = location.getLongitude();
+        LatLng coordinate = new LatLng(lat, lng);
+        mMap.animateCamera(CameraUpdateFactory.zoomBy(13));
+        CameraUpdate yourLocation = CameraUpdateFactory.newLatLngZoom(coordinate, 5);
+        mMap.animateCamera(yourLocation);
     }
 
     @Override
@@ -64,7 +81,17 @@ public class MapsActivity extends FragmentActivity {
      * This should only be called once and when we are sure that {@link #mMap} is not null.
      */
     private void setUpMap() {
-        mMap.addMarker(new MarkerOptions().position(new LatLng(0, 0)).title("Marker"));
+        // Instantiates a new CircleOptions object and defines the center and radius
+        // Feel free to change properties here! https://developers.google.com/maps/documentation/android/shapes
+        // contains more information about properties.
+        CircleOptions circleOptions = new CircleOptions()
+                .center(new LatLng(37.4, -122.1))
+                .visible(true)
+                .radius(100000); // In meters
+
+        // Get back the mutable Circle
+        mMap.addCircle(circleOptions);
+        mMap.addMarker(new MarkerOptions().position(new LatLng(37.4, -122.1)).title("Marker"));
 
     }
 
