@@ -2,6 +2,15 @@ package com.example.jingyuliu.glocate;
 
 import android.support.v4.app.FragmentActivity;
 import android.os.Bundle;
+import android.location.Address;
+import android.location.Geocoder;
+import android.os.AsyncTask;
+import android.view.Menu;
+import android.view.View;
+import android.view.View.OnClickListener;
+import android.widget.Button;
+import android.widget.EditText;
+import android.widget.Toast;
 
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.SupportMapFragment;
@@ -66,13 +75,13 @@ public class MapsActivity extends FragmentActivity {
             mMap = ((SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.map))
                     .getMap();
             mMap.setMyLocationEnabled(true);
+        }
 
             // Check if we were successful in obtaining the map.
             if (mMap != null) {
                 setUpMap();
             }
         }
-    }
 
     /**
      * This is where we can add markers or lines, add listeners or move the camera. In this case, we
@@ -81,11 +90,19 @@ public class MapsActivity extends FragmentActivity {
      * This should only be called once and when we are sure that {@link #mMap} is not null.
      */
     private void setUpMap() {
+        // Obtains current location coordinates to be fed into circle.
+        Criteria criteria = new Criteria();
+        LocationManager locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
+        String provider = locationManager.getBestProvider(criteria, false);
+        Location location = locationManager.getLastKnownLocation(provider);
+        double lat =  location.getLatitude();
+        double lng = location.getLongitude();
+        LatLng coordinate = new LatLng(lat, lng);
         // Instantiates a new CircleOptions object and defines the center and radius
         // Feel free to change properties here! https://developers.google.com/maps/documentation/android/shapes
         // contains more information about properties.
         CircleOptions circleOptions = new CircleOptions()
-                .center(new LatLng(37.4, -122.1))
+                .center(coordinate)
                 .visible(true)
                 .radius(100000); // In meters
 
