@@ -2,15 +2,15 @@ package com.example.jingyuliu.glocate;
 
 import android.support.v4.app.FragmentActivity;
 import android.os.Bundle;
-import android.location.Address;
-import android.location.Geocoder;
-import android.os.AsyncTask;
+//import android.location.Address;
+//import android.location.Geocoder;
+/*import android.os.AsyncTask;
 import android.view.Menu;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.Button;
 import android.widget.EditText;
-import android.widget.Toast;
+import android.widget.Toast;*/
 
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.SupportMapFragment;
@@ -34,16 +34,7 @@ public class MapsActivity extends FragmentActivity {
         setContentView(R.layout.activity_maps);
         setUpMapIfNeeded();
         mMap.setMyLocationEnabled(true);
-        Criteria criteria = new Criteria();
-        LocationManager locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
-        String provider = locationManager.getBestProvider(criteria, false);
-        Location location = locationManager.getLastKnownLocation(provider);
-        double lat =  location.getLatitude();
-        double lng = location.getLongitude();
-        LatLng coordinate = new LatLng(lat, lng);
-        mMap.animateCamera(CameraUpdateFactory.zoomBy(13));
-        CameraUpdate yourLocation = CameraUpdateFactory.newLatLngZoom(coordinate, 5);
-        mMap.animateCamera(yourLocation);
+
     }
 
     @Override
@@ -98,6 +89,8 @@ public class MapsActivity extends FragmentActivity {
         double lat =  location.getLatitude();
         double lng = location.getLongitude();
         LatLng coordinate = new LatLng(lat, lng);
+        CameraUpdate yourLocation = CameraUpdateFactory.newLatLngZoom(coordinate, 5);
+        mMap.animateCamera(yourLocation);
         // Instantiates a new CircleOptions object and defines the center and radius
         // Feel free to change properties here! https://developers.google.com/maps/documentation/android/shapes
         // contains more information about properties.
