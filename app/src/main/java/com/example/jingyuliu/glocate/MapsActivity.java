@@ -1,17 +1,14 @@
 package com.example.jingyuliu.glocate;
 
+import android.app.Dialog;
+import android.content.IntentSender;
+import android.location.Location;
+import android.support.v4.app.DialogFragment;
 import android.support.v4.app.FragmentActivity;
 import android.os.Bundle;
-//import android.location.Address;
-//import android.location.Geocoder;
-/*import android.os.AsyncTask;
-import android.view.Menu;
-import android.view.View;
-import android.view.View.OnClickListener;
-import android.widget.Button;
-import android.widget.EditText;
-import android.widget.Toast;*/
 
+
+import com.google.android.gms.common.ErrorDialogFragment;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
@@ -19,28 +16,218 @@ import com.google.android.gms.maps.model.CircleOptions;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.CameraUpdate;
+import com.loopj.android.http.JsonHttpResponseHandler;
+import com.loopj.android.http.RequestParams;
+
+import com.google.android.gms.common.ConnectionResult;
+import com.google.android.gms.common.GooglePlayServicesClient;
+import com.google.android.gms.common.GooglePlayServicesUtil;
+import com.google.android.gms.location.LocationClient;
+import com.google.android.gms.location.LocationListener;
+import com.google.android.gms.location.LocationRequest;
+
 import android.content.Context;
 import android.location.Criteria;
-import android.location.Location;
 import android.location.LocationManager;
+import android.util.Log;
+import android.widget.TextView;
 
-public class MapsActivity extends FragmentActivity {
+import org.apache.http.Header;
+import org.json.JSONArray;
+import org.json.JSONObject;
 
+
+public class MapsActivity extends FragmentActivity implements
+        LocationListener,
+        GooglePlayServicesClient.ConnectionCallbacks,
+        GooglePlayServicesClient.OnConnectionFailedListener {
+    // Play service
+    // A request to connect to Location Services
+    private LocationRequest mLocationRequest;
+
+    // Stores the current instantiation of the location client in this object
+    private LocationClient mLocationClient;
+    private TextView mLatLng;
+
+    private String TAG = "glocate.view";
     private GoogleMap mMap; // Might be null if Google Play services APK is not available.
 
+
+    /*
+     * Initialize the Activity
+     */
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_maps);
         setUpMapIfNeeded();
         mMap.setMyLocationEnabled(true);
+        mLatLng = (TextView) findViewById(R.id.lat_lng);
+
+        // Create a new global location parameters object
+        mLocationRequest = LocationRequest.create();
+
+        /*
+         * Set the update interval
+         */
+        mLocationRequest.setInterval(LocationUtils.UPDATE_INTERVAL_IN_MILLISECONDS);
+
+        // Use high accuracy
+        mLocationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
+
+        // Set the interval ceiling to one minute
+        mLocationRequest.setFastestInterval(LocationUtils.FAST_INTERVAL_CEILING_IN_MILLISECONDS);
+        /*
+         * Create a new location client, using the enclosing class to
+         * handle callbacks.
+         */
+        mLocationClient = new LocationClient(this, this, this);
 
     }
 
+    /*
+     * Called by Location Services when the request to connect the
+     * client finishes successfully. At this point, you can
+     * request the current location or start periodic updates
+     */
+    @Override
+    public void onConnected(Bundle bundle) {
+        startPeriodicUpdates();
+    }
+
+    /*
+         * Called by Location Services if the connection to the
+         * location client drops because of an error.
+         */
+    @Override
+    public void onDisconnected() { }
+
+    /*
+     * Called by Location Services if the attempt to
+     * Location Services fails.
+     */
+    @Override
+    public void onConnectionFailed(ConnectionResult connectionResult) {
+
+        /*
+         * Google Play services can resolve some errors it detects.
+         * If the error has a resolution, try sending an Intent to
+         * start a Google Play services activity that can resolve
+         * error.
+         */
+        if (connectionResult.hasResolution()) {
+            try {
+
+                // Start an Activity that tries to resolve the error
+                connectionResult.startResolutionForResult(
+                        this,
+                        LocationUtils.CONNECTION_FAILURE_RESOLUTION_REQUEST);
+
+                /*
+                * Thrown if Google Play services canceled the original
+                * PendingIntent
+                */
+
+            } catch (IntentSender.SendIntentException e) {
+
+                // Log the error
+                e.printStackTrace();
+            }
+        } else {
+
+            // If no resolution is available, display a dialog to the user with the error.
+        }
+    }
+
+
+    /**
+     * In response to a request to start updates, send a request
+     * to Location Services
+     */
+    private void startPeriodicUpdates() {
+        mLocationClient.requestLocationUpdates(mLocationRequest, this);
+    }
+
+
+    @Override
+    public void onPause() {
+        super.onPause();
+    }
+
+
+    /*
+     * Called when the Activity is restarted, even before it becomes visible.
+     */
+    @Override
+    public void onStart() {
+
+        super.onStart();
+
+        /*
+         * Connect the client. Don't re-start any requests here;
+         * instead, wait for onResume()
+         */
+        mLocationClient.connect();
+
+    }
+
+
+    /*
+     * Called when the system detects that this Activity is now visible.
+     */
     @Override
     protected void onResume() {
         super.onResume();
         setUpMapIfNeeded();
+    }
+
+
+    /**
+     * Verify that Google Play services is available before making a request.
+     *
+     * @return true if Google Play services is available, otherwise false
+     */
+    private boolean servicesConnected() {
+
+        // Check that Google Play services is available
+        int resultCode =
+                GooglePlayServicesUtil.isGooglePlayServicesAvailable(this);
+
+        // If Google Play services is available
+        if (ConnectionResult.SUCCESS == resultCode) {
+            // In debug mode, log the status
+            Log.d(LocationUtils.APPTAG, getString(R.string.play_services_available));
+
+            // Continue
+            return true;
+            // Google Play services was not available for some reason
+        } else {
+            // Display an error dialog
+            Dialog dialog = GooglePlayServicesUtil.getErrorDialog(resultCode, this, 0);
+            if (dialog != null) {
+                ErrorDialogFragment errorFragment = new ErrorDialogFragment();
+                errorFragment.setDialog(dialog);
+                errorFragment.show(getSupportFragmentManager(), LocationUtils.APPTAG);
+            }
+            return false;
+        }
+    }
+
+
+    /**
+     * Report location updates to the UI.
+     *
+     * @param location The updated location.
+     */
+    @Override
+    public void onLocationChanged(Location location) {
+        // In the UI, set the latitude and longitude to the value received
+        mLatLng.setText(LocationUtils.getLatLng(this, location));
+        postMyLocation(location.getLatitude(), location.getLongitude());
+        LatLng coordinate = new LatLng(location.getLatitude(), location.getLongitude());
+        CameraUpdate yourLocation = CameraUpdateFactory.newLatLngZoom(coordinate, 5);
+        mMap.animateCamera(yourLocation);
+        Log.d(TAG, "Zoom in at latitude:" +coordinate.latitude +", longitude: " + coordinate.longitude);
     }
 
 
@@ -82,27 +269,77 @@ public class MapsActivity extends FragmentActivity {
      */
     private void setUpMap() {
         // Obtains current location coordinates to be fed into circle.
-        Criteria criteria = new Criteria();
-        LocationManager locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
-        String provider = locationManager.getBestProvider(criteria, false);
-        Location location = locationManager.getLastKnownLocation(provider);
-        double lat =  location.getLatitude();
-        double lng = location.getLongitude();
-        LatLng coordinate = new LatLng(lat, lng);
-        CameraUpdate yourLocation = CameraUpdateFactory.newLatLngZoom(coordinate, 5);
-        mMap.animateCamera(yourLocation);
         // Instantiates a new CircleOptions object and defines the center and radius
         // Feel free to change properties here! https://developers.google.com/maps/documentation/android/shapes
         // contains more information about properties.
-        CircleOptions circleOptions = new CircleOptions()
-                .center(coordinate)
-                .visible(true)
-                .radius(100000); // In meters
+//        CircleOptions circleOptions = new CircleOptions()
+//                .center(coordinate)
+//                .visible(true)
+//                .radius(100000); // In meters
 
         // Get back the mutable Circle
-        mMap.addCircle(circleOptions);
-        mMap.addMarker(new MarkerOptions().position(new LatLng(37.4, -122.1)).title("Marker"));
+//        mMap.addCircle(circleOptions);
+//        mMap.addMarker(new MarkerOptions().position(new LatLng(37.4, -122.1)).title("Marker"));
 
     }
 
+
+    private void postMyLocation(double longitude, double latitude) {
+        RequestParams params = new RequestParams();
+        params.put("phone", "4243547208");
+        params.put("name", "DL");
+        params.put("email", "ljy1681@gmail.com");
+        params.put("longitude", longitude);
+        params.put("latitude", latitude);
+        MyFuckingClient.post("about/me", params, new JsonHttpResponseHandler() {
+            @Override
+            public void onSuccess(int statusCode, Header[] headers, JSONObject response) {
+                // If the response is JSONObject instead of expected JSONArray
+                Log.d(TAG, "Fuking yeah.");
+                Log.d(TAG, String.valueOf(response));
+            }
+
+            @Override
+            public void onSuccess(int statusCode, Header[] headers, JSONArray timeline) {
+                // Pull out the first event on the public timeline
+                Log.d(TAG, "Fuking yeah.");
+            }
+        });
+    }
+
+
+    /**
+     * Define a DialogFragment to display the error dialog generated in
+     * showErrorDialog.
+     */
+    public static class ErrorDialogFragment extends DialogFragment {
+
+        // Global field to contain the error dialog
+        private Dialog mDialog;
+
+        /**
+         * Default constructor. Sets the dialog field to null
+         */
+        public ErrorDialogFragment() {
+            super();
+            mDialog = null;
+        }
+
+        /**
+         * Set the dialog to display
+         *
+         * @param dialog An error dialog
+         */
+        public void setDialog(Dialog dialog) {
+            mDialog = dialog;
+        }
+
+        /*
+         * This method must return a Dialog to the DialogFragment.
+         */
+        @Override
+        public Dialog onCreateDialog(Bundle savedInstanceState) {
+            return mDialog;
+        }
+    }
 }

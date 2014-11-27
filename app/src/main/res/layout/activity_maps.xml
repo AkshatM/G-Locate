@@ -10,6 +10,16 @@
         android:layout_height="wrap_content"
         android:orientation="horizontal" >
 
+        <TextView
+            android:id="@+id/lat_lng"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="10dp"
+            android:layout_marginTop="30dp"
+            android:layout_toLeftOf="@+id/btn_find"
+            android:textIsSelectable="true"
+            android:textSize="20sp" />
+
         <Button
             android:id="@+id/btn_find"
             android:layout_width="wrap_content"

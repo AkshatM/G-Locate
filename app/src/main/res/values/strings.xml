@@ -4,6 +4,12 @@
     <string name="app_name">G-Locate</string>
     <string name="title_activity_maps">G-Locate</string>
     <string name="str_btn_find">Find</string>
+    <string name="lat_lng">--Unknown--</string>
+
     <string name="hnt_et_location">Enter Location</string>
+
+    <!--play service-->
+    <string name="latitude_longitude">%1$.8f, %2$.8f</string>
+    <string name="play_services_available">Google Play services is available</string>
 
 </resources>
