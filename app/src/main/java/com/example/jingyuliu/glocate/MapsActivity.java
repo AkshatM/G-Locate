@@ -8,14 +8,13 @@ import android.support.v4.app.FragmentActivity;
 import android.os.Bundle;
 
 
-import com.google.android.gms.common.ErrorDialogFragment;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
-import com.google.android.gms.maps.model.CircleOptions;
-import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.CameraUpdate;
+import com.google.android.gms.maps.model.TileOverlayOptions;
+import com.google.maps.android.heatmaps.HeatmapTileProvider;
 import com.loopj.android.http.JsonHttpResponseHandler;
 import com.loopj.android.http.RequestParams;
 
@@ -26,15 +25,18 @@ import com.google.android.gms.location.LocationClient;
 import com.google.android.gms.location.LocationListener;
 import com.google.android.gms.location.LocationRequest;
 
-import android.content.Context;
-import android.location.Criteria;
-import android.location.LocationManager;
 import android.util.Log;
 import android.widget.TextView;
 
 import org.apache.http.Header;
 import org.json.JSONArray;
+import org.json.JSONException;
 import org.json.JSONObject;
+
+import com.google.android.gms.maps.model.TileOverlay;
+
+import java.util.ArrayList;
+import java.util.List;
 
 
 public class MapsActivity extends FragmentActivity implements
@@ -49,10 +51,13 @@ public class MapsActivity extends FragmentActivity implements
     private LocationClient mLocationClient;
     private TextView mLatLng;
 
+    private boolean zoomToMyLocation = false;
+
     private String TAG = "glocate.view";
     private GoogleMap mMap; // Might be null if Google Play services APK is not available.
-
-
+    private HeatmapTileProvider mHeatMapProvider;
+    private TileOverlay mOverlay;
+    private List<LatLng> mInterstingPoints;
     /*
      * Initialize the Activity
      */
@@ -83,6 +88,58 @@ public class MapsActivity extends FragmentActivity implements
          */
         mLocationClient = new LocationClient(this, this, this);
 
+    }
+
+
+    private void addHeatMap() {
+        // Get the data: latitude/longitude positions of police stations.
+        // Create a heat map tile provider, passing it the latlngs of the police stations.
+        mHeatMapProvider = new HeatmapTileProvider.Builder()
+                .data(mInterstingPoints)
+                .build();
+        // Add a tile overlay to the map, using the heat map tile provider.
+        // Refresh map
+        if(mOverlay!=null) mOverlay.remove();
+        mOverlay = mMap.addTileOverlay(new TileOverlayOptions().tileProvider(mHeatMapProvider));
+    }
+
+
+    private void readList(Location location) {
+        RequestParams params = new RequestParams();
+        params.put("phone", "4243547208");
+        params.put("name", "DL");
+        params.put("email", "ljy1681@gmail.com");
+        params.put("longitude", location.getLatitude());
+        params.put("latitude", location.getLongitude());
+        MyFuckingClient.get("around/me", params, new JsonHttpResponseHandler() {
+            @Override
+            public void onSuccess(int statusCode, Header[] headers, JSONArray jsonArr) {
+                // Pull out the first event on the public timeline
+                Log.d(TAG, "Posting route success array");
+                Log.d(TAG, String.valueOf(jsonArr));
+                try {
+                    mInterstingPoints = parseList(jsonArr);
+                    addHeatMap();
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                    Log.d(TAG, "JSON EXCEPTION T T");
+                }
+            }
+        });
+
+    }
+
+    public List<LatLng> parseList(JSONArray arr) throws JSONException {
+        List<LatLng> list = new ArrayList<LatLng>();;
+        for(int i = 0; i < arr.length(); i++){
+            JSONObject jsonobj = arr.getJSONObject(i);
+            double lat, longi;
+            lat = Double.parseDouble((jsonobj.get("latitude").toString()));
+            longi = Double.parseDouble(jsonobj.get("longitude").toString());
+            Log.d(TAG, i + "th " + String.valueOf(lat) + ' ' + String.valueOf(longi));
+            list.add(new LatLng(lat, longi));
+        }
+        return list;
     }
 
     /*
@@ -226,8 +283,13 @@ public class MapsActivity extends FragmentActivity implements
         postMyLocation(location.getLatitude(), location.getLongitude());
         LatLng coordinate = new LatLng(location.getLatitude(), location.getLongitude());
         CameraUpdate yourLocation = CameraUpdateFactory.newLatLngZoom(coordinate, 5);
-        mMap.animateCamera(yourLocation);
-        Log.d(TAG, "Zoom in at latitude:" +coordinate.latitude +", longitude: " + coordinate.longitude);
+        if(!zoomToMyLocation)
+            mMap.animateCamera(yourLocation);
+            zoomToMyLocation = true;
+
+        Log.d(TAG, "Zoom in at latitude:" + coordinate.latitude + ", longitude: " + coordinate.longitude);
+        Log.d(TAG, "reloading heatmap");
+        readList(location);
     }
 
 
