@@ -31,6 +31,7 @@ import com.google.android.gms.location.LocationRequest;
 import android.util.Log;
 import android.widget.EditText;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import org.apache.http.Header;
 import org.json.JSONArray;
@@ -324,14 +325,20 @@ public class MapsActivity extends FragmentActivity implements
         String address = mSearch.getText().toString();
         try {
             List<Address> foundAddresses = gc.getFromLocationName(address, 5); // Search addresses
-            Address firstresult = foundAddresses.get(0);
-            LatLng newcoordinate = new LatLng(firstresult.getLatitude(), firstresult.getLongitude());
-            CameraUpdate newLocation = CameraUpdateFactory.newLatLngZoom(newcoordinate, 5);
-            mLatLng.setText(Double.toString(firstresult.getLatitude()) + ',' +  Double.toString(firstresult.getLongitude()));
-            zoomToMyLocation = false;
-            if (!zoomToMyLocation) {
-                mMap.animateCamera(newLocation);
-                zoomToMyLocation = true;
+            if (foundAddresses==null||foundAddresses.isEmpty()){
+                Toast.makeText(getApplicationContext(),
+                        "Address does not exist", Toast.LENGTH_LONG).show();
+            }
+            else {
+                Address firstresult = foundAddresses.get(0);
+                LatLng newcoordinate = new LatLng(firstresult.getLatitude(), firstresult.getLongitude());
+                CameraUpdate newLocation = CameraUpdateFactory.newLatLngZoom(newcoordinate, 5);
+                mLatLng.setText(Double.toString(firstresult.getLatitude()) + ',' + Double.toString(firstresult.getLongitude()));
+                zoomToMyLocation = false;
+                if (!zoomToMyLocation) {
+                    mMap.animateCamera(newLocation);
+                    zoomToMyLocation = true;
+                }
             }
         }
         catch (Exception e)
