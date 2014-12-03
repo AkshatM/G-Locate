@@ -1,8 +1,11 @@
 package com.example.jingyuliu.glocate;
 
 import android.app.Dialog;
+import android.view.View;
 import android.content.IntentSender;
 import android.location.Location;
+import android.location.Geocoder;
+import android.location.Address;
 import android.support.v4.app.DialogFragment;
 import android.support.v4.app.FragmentActivity;
 import android.os.Bundle;
@@ -26,6 +29,7 @@ import com.google.android.gms.location.LocationListener;
 import com.google.android.gms.location.LocationRequest;
 
 import android.util.Log;
+import android.widget.EditText;
 import android.widget.TextView;
 
 import org.apache.http.Header;
@@ -50,8 +54,10 @@ public class MapsActivity extends FragmentActivity implements
     // Stores the current instantiation of the location client in this object
     private LocationClient mLocationClient;
     private TextView mLatLng;
+    private EditText mSearch;
 
     private boolean zoomToMyLocation = false;
+    Geocoder gc = new Geocoder(this);
 
     private String TAG = "glocate.view";
     private GoogleMap mMap; // Might be null if Google Play services APK is not available.
@@ -68,7 +74,7 @@ public class MapsActivity extends FragmentActivity implements
         setUpMapIfNeeded();
         mMap.setMyLocationEnabled(true);
         mLatLng = (TextView) findViewById(R.id.lat_lng);
-
+        mSearch = (EditText) findViewById(R.id.et_location);
         // Create a new global location parameters object
         mLocationRequest = LocationRequest.create();
 
@@ -89,7 +95,6 @@ public class MapsActivity extends FragmentActivity implements
         mLocationClient = new LocationClient(this, this, this);
 
     }
-
 
     private void addHeatMap() {
         // Get the data: latitude/longitude positions of police stations.
@@ -130,7 +135,7 @@ public class MapsActivity extends FragmentActivity implements
     }
 
     public List<LatLng> parseList(JSONArray arr) throws JSONException {
-        List<LatLng> list = new ArrayList<LatLng>();;
+        List<LatLng> list = new ArrayList<LatLng>();
         for(int i = 0; i < arr.length(); i++){
             JSONObject jsonobj = arr.getJSONObject(i);
             double lat, longi;
@@ -283,15 +288,52 @@ public class MapsActivity extends FragmentActivity implements
         postMyLocation(location.getLatitude(), location.getLongitude());
         LatLng coordinate = new LatLng(location.getLatitude(), location.getLongitude());
         CameraUpdate yourLocation = CameraUpdateFactory.newLatLngZoom(coordinate, 5);
-        if(!zoomToMyLocation)
+        if (!zoomToMyLocation) {
             mMap.animateCamera(yourLocation);
             zoomToMyLocation = true;
+        }
 
         Log.d(TAG, "Zoom in at latitude:" + coordinate.latitude + ", longitude: " + coordinate.longitude);
         Log.d(TAG, "reloading heatmap");
         readList(location);
+//        Uncomment the following to view functionality without invoking find button
+//        String address = mSearch.getText().toString();
+//        try {
+//            List<Address> foundAddresses = gc.getFromLocationName(address, 5); // Search addresses
+//            Address firstresult = foundAddresses.get(0);
+//            LatLng newcoordinate = new LatLng(firstresult.getLatitude(), firstresult.getLongitude());
+//            CameraUpdate newLocation = CameraUpdateFactory.newLatLngZoom(newcoordinate, 5);
+//            zoomToMyLocation = false;
+//            if (!zoomToMyLocation) {
+//                mMap.animateCamera(newLocation);
+//                zoomToMyLocation = true;
+//            }
+//        }
+//        catch (Exception e)
+//        {
+//            // Do nothing
+//        }
     }
 
+    public void commitSearch(View button1){
+        //When button is pressed, it performs this action.
+        String address = mSearch.getText().toString();
+        try {
+            List<Address> foundAddresses = gc.getFromLocationName(address, 5); // Search addresses
+            Address firstresult = foundAddresses.get(0);
+            LatLng newcoordinate = new LatLng(firstresult.getLatitude(), firstresult.getLongitude());
+            CameraUpdate newLocation = CameraUpdateFactory.newLatLngZoom(newcoordinate, 5);
+            zoomToMyLocation = false;
+            if (!zoomToMyLocation) {
+                mMap.animateCamera(newLocation);
+                zoomToMyLocation = true;
+            }
+        }
+        catch (Exception e)
+        {
+            // Do nothing
+        }
+    }
 
     /**
      * Sets up the map if it is possible to do so (i.e., the Google Play services APK is correctly
