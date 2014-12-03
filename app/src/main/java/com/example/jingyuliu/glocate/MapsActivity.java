@@ -57,6 +57,7 @@ public class MapsActivity extends FragmentActivity implements
     private EditText mSearch;
 
     private boolean zoomToMyLocation = false;
+    private boolean firstTimeInvoked = true;
     Geocoder gc = new Geocoder(this);
 
     private String TAG = "glocate.view";
@@ -284,7 +285,9 @@ public class MapsActivity extends FragmentActivity implements
     @Override
     public void onLocationChanged(Location location) {
         // In the UI, set the latitude and longitude to the value received
-        mLatLng.setText(LocationUtils.getLatLng(this, location));
+        if (firstTimeInvoked == true) {
+            mLatLng.setText(LocationUtils.getLatLng(this, location));
+        }
         postMyLocation(location.getLatitude(), location.getLongitude());
         LatLng coordinate = new LatLng(location.getLatitude(), location.getLongitude());
         CameraUpdate yourLocation = CameraUpdateFactory.newLatLngZoom(coordinate, 5);
@@ -317,12 +320,14 @@ public class MapsActivity extends FragmentActivity implements
 
     public void commitSearch(View button1){
         //When button is pressed, it performs this action.
+        firstTimeInvoked = false;
         String address = mSearch.getText().toString();
         try {
             List<Address> foundAddresses = gc.getFromLocationName(address, 5); // Search addresses
             Address firstresult = foundAddresses.get(0);
             LatLng newcoordinate = new LatLng(firstresult.getLatitude(), firstresult.getLongitude());
             CameraUpdate newLocation = CameraUpdateFactory.newLatLngZoom(newcoordinate, 5);
+            mLatLng.setText(Double.toString(firstresult.getLatitude()) + ',' +  Double.toString(firstresult.getLongitude()));
             zoomToMyLocation = false;
             if (!zoomToMyLocation) {
                 mMap.animateCamera(newLocation);
