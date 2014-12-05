@@ -29,7 +29,7 @@ import com.google.android.gms.location.LocationListener;
 import com.google.android.gms.location.LocationRequest;
 
 import android.util.Log;
-import android.widget.EditText;
+import android.widget.AutoCompleteTextView;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -48,6 +48,7 @@ public class MapsActivity extends FragmentActivity implements
         LocationListener,
         GooglePlayServicesClient.ConnectionCallbacks,
         GooglePlayServicesClient.OnConnectionFailedListener {
+
     // Play service
     // A request to connect to Location Services
     private LocationRequest mLocationRequest;
@@ -55,7 +56,7 @@ public class MapsActivity extends FragmentActivity implements
     // Stores the current instantiation of the location client in this object
     private LocationClient mLocationClient;
     private TextView mLatLng;
-    private EditText mSearch;
+    private AutoCompleteTextView mSearch;
 
     private boolean zoomToMyLocation = false;
     private boolean firstTimeInvoked = true;
@@ -76,7 +77,7 @@ public class MapsActivity extends FragmentActivity implements
         setUpMapIfNeeded();
         mMap.setMyLocationEnabled(true);
         mLatLng = (TextView) findViewById(R.id.lat_lng);
-        mSearch = (EditText) findViewById(R.id.et_location);
+        mSearch = (AutoCompleteTextView) findViewById(R.id.et_location);
         // Create a new global location parameters object
         mLocationRequest = LocationRequest.create();
 
@@ -286,20 +287,23 @@ public class MapsActivity extends FragmentActivity implements
     @Override
     public void onLocationChanged(Location location) {
         // In the UI, set the latitude and longitude to the value received
-        if (firstTimeInvoked == true) {
-            mLatLng.setText(LocationUtils.getLatLng(this, location));
-        }
-        postMyLocation(location.getLatitude(), location.getLongitude());
-        LatLng coordinate = new LatLng(location.getLatitude(), location.getLongitude());
-        CameraUpdate yourLocation = CameraUpdateFactory.newLatLngZoom(coordinate, 5);
-        if (!zoomToMyLocation) {
-            mMap.animateCamera(yourLocation);
-            zoomToMyLocation = true;
-        }
+        if (servicesConnected()) {
+            if (firstTimeInvoked) {
+                mLatLng.setText(LocationUtils.getLatLng(this, location));
+                firstTimeInvoked = false;
+            }
+            postMyLocation(location.getLatitude(), location.getLongitude());
+            LatLng coordinate = new LatLng(location.getLatitude(), location.getLongitude());
+            CameraUpdate yourLocation = CameraUpdateFactory.newLatLngZoom(coordinate, 5);
+            if (!zoomToMyLocation) {
+                mMap.animateCamera(yourLocation);
+                zoomToMyLocation = true;
+            }
 
-        Log.d(TAG, "Zoom in at latitude:" + coordinate.latitude + ", longitude: " + coordinate.longitude);
-        Log.d(TAG, "reloading heatmap");
-        readList(location);
+            Log.d(TAG, "Zoom in at latitude:" + coordinate.latitude + ", longitude: " + coordinate.longitude);
+            Log.d(TAG, "reloading heatmap");
+            readList(location);
+        }
 //        Uncomment the following to view functionality without invoking find button
 //        String address = mSearch.getText().toString();
 //        try {
@@ -321,10 +325,9 @@ public class MapsActivity extends FragmentActivity implements
 
     public void commitSearch(View button1){
         //When button is pressed, it performs this action.
-        firstTimeInvoked = false;
         String address = mSearch.getText().toString();
         try {
-            List<Address> foundAddresses = gc.getFromLocationName(address, 5); // Search addresses
+            List<Address> foundAddresses = gc.getFromLocationName(address, 1); // Search addresses
             if (foundAddresses==null||foundAddresses.isEmpty()){
                 Toast.makeText(getApplicationContext(),
                         "Address does not exist", Toast.LENGTH_LONG).show();
@@ -332,7 +335,7 @@ public class MapsActivity extends FragmentActivity implements
             else {
                 Address firstresult = foundAddresses.get(0);
                 LatLng newcoordinate = new LatLng(firstresult.getLatitude(), firstresult.getLongitude());
-                CameraUpdate newLocation = CameraUpdateFactory.newLatLngZoom(newcoordinate, 5);
+                CameraUpdate newLocation = CameraUpdateFactory.newLatLngZoom(newcoordinate, 13);
                 mLatLng.setText(Double.toString(firstresult.getLatitude()) + ',' + Double.toString(firstresult.getLongitude()));
                 zoomToMyLocation = false;
                 if (!zoomToMyLocation) {
