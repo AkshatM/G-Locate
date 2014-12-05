@@ -21,11 +21,6 @@ public class Login extends Activity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login);
         amILoggedIn();
-        /*if (hasLoggedIn){
-            Intent intent = new Intent(this, MapsActivity.class);
-            startActivity(intent);
-            Login.this.finish();
-        }*/
     }
 
     public void loginComplete(View view) {
@@ -50,7 +45,7 @@ public class Login extends Activity {
         SharedPreferences settings = getSharedPreferences(Login.PREFS_NAME, 0);
         //Get "hasLoggedIn" value. If the value doesn't exist yet false is returned
         boolean hasLoggedIn = settings.getBoolean("hasLoggedIn", false);
-        if (hasLoggedIn==true){
+        if (hasLoggedIn){
             Intent intent = new Intent(this, MapsActivity.class);
             startActivity(intent);
             Login.this.finish();
