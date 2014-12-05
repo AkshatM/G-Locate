@@ -45,7 +45,6 @@ import com.google.android.gms.maps.model.TileOverlay;
 import java.util.ArrayList;
 import java.util.List;
 
-
 public class MapsActivity extends FragmentActivity implements
         LocationListener,
         GooglePlayServicesClient.ConnectionCallbacks,
@@ -54,6 +53,9 @@ public class MapsActivity extends FragmentActivity implements
     // Play service
     // A request to connect to Location Services
     private LocationRequest mLocationRequest;
+    public String mPhoneNumber;
+    //TelephonyManager tMgr = (TelephonyManager)this.getSystemService(Context.TELEPHONY_SERVICE);
+    //String mPhoneNumber = tMgr.getLine1Number();
 
     // Stores the current instantiation of the location client in this object
     private LocationClient mLocationClient;
@@ -113,26 +115,20 @@ public class MapsActivity extends FragmentActivity implements
             case R.id.action_settings:
                 Toast.makeText(getApplicationContext(),
                         "You selected settings!", Toast.LENGTH_SHORT).show();
+                break;
+            case R.id.heatmap:
+                addHeatMap();
+                break;
+            default:
+                break;
         }
         return true;
-    }
-
-    private void addHeatMap() {
-        // Get the data: latitude/longitude positions of police stations.
-        // Create a heat map tile provider, passing it the latlngs of the police stations.
-        mHeatMapProvider = new HeatmapTileProvider.Builder()
-                .data(mInterstingPoints)
-                .build();
-        // Add a tile overlay to the map, using the heat map tile provider.
-        // Refresh map
-        if(mOverlay!=null) mOverlay.remove();
-        mOverlay = mMap.addTileOverlay(new TileOverlayOptions().tileProvider(mHeatMapProvider));
     }
 
 
     private void readList(Location location) {
         RequestParams params = new RequestParams();
-        params.put("phone", "4243547208");
+        params.put("phone", "5129037891"); // use "5129037891" or Danny's
         params.put("name", "DL");
         params.put("email", "ljy1681@gmail.com");
         params.put("longitude", location.getLatitude());
@@ -168,6 +164,20 @@ public class MapsActivity extends FragmentActivity implements
         return list;
     }
 
+
+    private void addHeatMap() {
+        // Get the data: latitude/longitude positions of police stations.
+        // Create a heat map tile provider, passing it the latlngs of the police stations.
+        mHeatMapProvider = new HeatmapTileProvider.Builder()
+                .data(mInterstingPoints)
+                .build();
+        // Add a tile overlay to the map, using the heat map tile provider.
+        // Refresh map
+        if(mOverlay!=null) {
+            mOverlay.remove();
+        }
+        mOverlay = mMap.addTileOverlay(new TileOverlayOptions().tileProvider(mHeatMapProvider));
+    }
     /*
      * Called by Location Services when the request to connect the
      * client finishes successfully. At this point, you can
@@ -353,6 +363,7 @@ public class MapsActivity extends FragmentActivity implements
             else {
                 Address firstresult = foundAddresses.get(0);
                 LatLng newcoordinate = new LatLng(firstresult.getLatitude(), firstresult.getLongitude());
+                postMyLocation(firstresult.getLatitude(), firstresult.getLongitude());
                 CameraUpdate newLocation = CameraUpdateFactory.newLatLngZoom(newcoordinate, 13);
                 mLatLng.setText(Double.toString(firstresult.getLatitude()) + ',' + Double.toString(firstresult.getLongitude()));
                 zoomToMyLocation = false;
@@ -423,7 +434,7 @@ public class MapsActivity extends FragmentActivity implements
 
     private void postMyLocation(double longitude, double latitude) {
         RequestParams params = new RequestParams();
-        params.put("phone", "4243547208");
+        params.put("phone", "5129037891");
         params.put("name", "DL");
         params.put("email", "ljy1681@gmail.com");
         params.put("longitude", longitude);

@@ -8,5 +8,9 @@
         android:showAsAction="always"
         android:title="Settings">
     </item>
+    <item
+        android:id="@+id/heatmap"
+        android:title="Heatmap">
+    </item>
 
 </menu>
