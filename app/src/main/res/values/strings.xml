@@ -5,6 +5,7 @@
     <string name="title_activity_maps">G-Locate</string>
     <string name="str_btn_find">Find</string>
     <string name="lat_lng">--Unknown--</string>
+    <string name="Settings">Settings</string>
 
     <string name="hnt_et_location">Enter Location</string>
 

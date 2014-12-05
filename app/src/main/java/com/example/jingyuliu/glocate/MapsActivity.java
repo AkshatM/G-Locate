@@ -1,6 +1,7 @@
 package com.example.jingyuliu.glocate;
 
 import android.app.Dialog;
+import android.view.MenuItem;
 import android.view.View;
 import android.content.IntentSender;
 import android.location.Location;
@@ -9,7 +10,8 @@ import android.location.Address;
 import android.support.v4.app.DialogFragment;
 import android.support.v4.app.FragmentActivity;
 import android.os.Bundle;
-
+import android.view.Menu;
+import android.view.MenuInflater;
 
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.SupportMapFragment;
@@ -97,6 +99,22 @@ public class MapsActivity extends FragmentActivity implements
          */
         mLocationClient = new LocationClient(this, this, this);
 
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        MenuInflater inflater = getMenuInflater();
+        inflater.inflate(R.menu.menu_file, menu);
+        return true;
+    }
+
+    public boolean onOptionsItemSelected(MenuItem item){
+        switch (item.getItemId()){
+            case R.id.action_settings:
+                Toast.makeText(getApplicationContext(),
+                        "You selected settings!", Toast.LENGTH_SHORT).show();
+        }
+        return true;
     }
 
     private void addHeatMap() {
