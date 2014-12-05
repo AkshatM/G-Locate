@@ -53,7 +53,6 @@ public class MapsActivity extends FragmentActivity implements
     // Play service
     // A request to connect to Location Services
     private LocationRequest mLocationRequest;
-    public String mPhoneNumber;
     //TelephonyManager tMgr = (TelephonyManager)this.getSystemService(Context.TELEPHONY_SERVICE);
     //String mPhoneNumber = tMgr.getLine1Number();
 
@@ -84,7 +83,6 @@ public class MapsActivity extends FragmentActivity implements
         mSearch = (AutoCompleteTextView) findViewById(R.id.et_location);
         // Create a new global location parameters object
         mLocationRequest = LocationRequest.create();
-
         /*
          * Set the update interval
          */
