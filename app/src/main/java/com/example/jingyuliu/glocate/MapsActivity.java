@@ -19,6 +19,7 @@ import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.CameraUpdate;
+import com.google.android.gms.maps.model.CircleOptions;
 import com.google.android.gms.maps.model.TileOverlayOptions;
 import com.google.maps.android.heatmaps.HeatmapTileProvider;
 import com.loopj.android.http.JsonHttpResponseHandler;
@@ -331,23 +332,6 @@ public class MapsActivity extends FragmentActivity implements
             Log.d(TAG, "reloading heatmap");
             readList(location);
         }
-//        Uncomment the following to view functionality without invoking find button
-//        String address = mSearch.getText().toString();
-//        try {
-//            List<Address> foundAddresses = gc.getFromLocationName(address, 5); // Search addresses
-//            Address firstresult = foundAddresses.get(0);
-//            LatLng newcoordinate = new LatLng(firstresult.getLatitude(), firstresult.getLongitude());
-//            CameraUpdate newLocation = CameraUpdateFactory.newLatLngZoom(newcoordinate, 5);
-//            zoomToMyLocation = false;
-//            if (!zoomToMyLocation) {
-//                mMap.animateCamera(newLocation);
-//                zoomToMyLocation = true;
-//            }
-//        }
-//        catch (Exception e)
-//        {
-//            // Do nothing
-//        }
     }
 
     public void commitSearch(View button1){
@@ -363,6 +347,11 @@ public class MapsActivity extends FragmentActivity implements
                 Address firstresult = foundAddresses.get(0);
                 LatLng newcoordinate = new LatLng(firstresult.getLatitude(), firstresult.getLongitude());
                 postMyLocation(firstresult.getLatitude(), firstresult.getLongitude());
+                CircleOptions circleOptions = new CircleOptions()
+                        .center(newcoordinate)
+                        .visible(true)
+                        .radius(10); // In meters
+                mMap.addCircle(circleOptions);
                 CameraUpdate newLocation = CameraUpdateFactory.newLatLngZoom(newcoordinate, 13);
                 mLatLng.setText(Double.toString(firstresult.getLatitude()) + ',' + Double.toString(firstresult.getLongitude()));
                 zoomToMyLocation = false;
