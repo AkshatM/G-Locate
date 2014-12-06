@@ -17,7 +17,7 @@ public class Login extends Activity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login);
-        amILoggedIn();
+        //amILoggedIn();
     }
 
     public void loginComplete(View view) {
@@ -26,13 +26,9 @@ public class Login extends Activity {
         Intent intent = new Intent(this, MapsActivity.class);
         String number = editText.getText().toString();
         String name = editText2.getText().toString();
-        if (number == null || number.isEmpty()) {
+        if (number == null || number.isEmpty()||name == null || name.isEmpty()) {
             Toast.makeText(getApplicationContext(),
-                    "Enter a valid number", Toast.LENGTH_LONG).show();
-        }
-        else if (name == null || name.isEmpty()){
-            Toast.makeText(getApplicationContext(),
-                    "Please enter a name", Toast.LENGTH_LONG).show();
+                    "Enter a valid name and number", Toast.LENGTH_LONG).show();
         }
         else {
             intent.putExtra("mPhoneNumber", number);

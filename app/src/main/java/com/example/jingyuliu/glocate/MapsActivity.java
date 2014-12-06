@@ -314,7 +314,7 @@ public class MapsActivity extends FragmentActivity implements
      */
     @Override
     public void onLocationChanged(Location location) {
-        // In the UI, set the latitude and longitude to the value received
+        // invoked once, when you open map for the first time.
         if (servicesConnected()) {
             if (firstTimeInvoked) {
                 mLatLng.setText(LocationUtils.getLatLng(this, location));
@@ -346,7 +346,6 @@ public class MapsActivity extends FragmentActivity implements
             else {
                 Address firstresult = foundAddresses.get(0);
                 LatLng newcoordinate = new LatLng(firstresult.getLatitude(), firstresult.getLongitude());
-                postMyLocation(firstresult.getLatitude(), firstresult.getLongitude());
                 CircleOptions circleOptions = new CircleOptions()
                         .center(newcoordinate)
                         .visible(true)
