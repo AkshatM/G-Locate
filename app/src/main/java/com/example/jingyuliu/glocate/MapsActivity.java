@@ -4,6 +4,7 @@ import android.app.Dialog;
 import android.view.MenuItem;
 import android.view.View;
 import android.content.IntentSender;
+import android.content.Intent;
 import android.location.Location;
 import android.location.Geocoder;
 import android.location.Address;
@@ -432,8 +433,11 @@ public class MapsActivity extends FragmentActivity implements
 
     private void postMyLocation(double longitude, double latitude) {
         RequestParams params = new RequestParams();
-        params.put("phone", "5129037891");
-        params.put("name", "DL");
+        Intent intent = getIntent();
+        String mPhoneNumber = intent.getStringExtra("mPhoneNumber");
+        String mName = intent.getStringExtra("mName");
+        params.put("phone", mPhoneNumber);
+        params.put("name", mName);
         params.put("email", "ljy1681@gmail.com");
         params.put("longitude", longitude);
         params.put("latitude", latitude);

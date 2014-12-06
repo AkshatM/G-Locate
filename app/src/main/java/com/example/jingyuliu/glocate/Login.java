@@ -12,9 +12,6 @@ import android.content.SharedPreferences;
 public class Login extends Activity {
 
     public static final String PREFS_NAME = "MyPrefsFile";
-    //SharedPreferences settings = getSharedPreferences(Login.PREFS_NAME, 0);
-    //Get "hasLoggedIn" value. If the value doesn't exist yet false is returned
-    //boolean hasLoggedIn = settings.getBoolean("hasLoggedIn", false);
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -25,13 +22,21 @@ public class Login extends Activity {
 
     public void loginComplete(View view) {
         EditText editText = (EditText) findViewById(R.id.phone_number);
+        EditText editText2 = (EditText) findViewById(R.id.user_name);
         Intent intent = new Intent(this, MapsActivity.class);
         String number = editText.getText().toString();
+        String name = editText2.getText().toString();
         if (number == null || number.isEmpty()) {
             Toast.makeText(getApplicationContext(),
                     "Enter a valid number", Toast.LENGTH_LONG).show();
-        } else {
+        }
+        else if (name == null || name.isEmpty()){
+            Toast.makeText(getApplicationContext(),
+                    "Please enter a name", Toast.LENGTH_LONG).show();
+        }
+        else {
             intent.putExtra("mPhoneNumber", number);
+            intent.putExtra("mName",name);
             startActivity(intent);
             SharedPreferences settings = getSharedPreferences(Login.PREFS_NAME, 0); // 0 - for private mode
             SharedPreferences.Editor editor = settings.edit();
