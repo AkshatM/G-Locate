@@ -5,6 +5,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.content.IntentSender;
 import android.content.Intent;
+import android.graphics.Color;
 import android.location.Location;
 import android.location.Geocoder;
 import android.location.Address;
@@ -21,6 +22,7 @@ import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.CameraUpdate;
 import com.google.android.gms.maps.model.CircleOptions;
 import com.google.android.gms.maps.model.TileOverlayOptions;
+import com.google.maps.android.heatmaps.Gradient;
 import com.google.maps.android.heatmaps.HeatmapTileProvider;
 import com.loopj.android.http.JsonHttpResponseHandler;
 import com.loopj.android.http.RequestParams;
@@ -46,6 +48,7 @@ import com.google.android.gms.maps.model.TileOverlay;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 
 public class MapsActivity extends FragmentActivity implements
         LocationListener,
@@ -65,13 +68,26 @@ public class MapsActivity extends FragmentActivity implements
 
     private boolean zoomToMyLocation = false;
     private boolean firstTimeInvoked = true;
-    Geocoder gc = new Geocoder(this);
+    private Geocoder gc = new Geocoder(this, Locale.US);
 
     private String TAG = "glocate.view";
     private GoogleMap mMap; // Might be null if Google Play services APK is not available.
     private HeatmapTileProvider mHeatMapProvider;
     private TileOverlay mOverlay;
     private List<LatLng> mInterstingPoints;
+
+    // Option for heatmap
+    // Create the gradient.
+    private int[] colors = {
+            Color.rgb(102, 225, 0), // green
+            Color.rgb(255, 153, 0)    // red
+    };
+
+    private float[] startPoints = {
+            0.2f, 1f
+    };
+    private Gradient gradient = new Gradient(colors, startPoints);
+
     /*
      * Initialize the Activity
      */
@@ -110,8 +126,8 @@ public class MapsActivity extends FragmentActivity implements
         return true;
     }
 
-    public boolean onOptionsItemSelected(MenuItem item){
-        switch (item.getItemId()){
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
             case R.id.action_settings:
                 Toast.makeText(getApplicationContext(),
                         "You selected settings!", Toast.LENGTH_SHORT).show();
@@ -125,8 +141,41 @@ public class MapsActivity extends FragmentActivity implements
         return true;
     }
 
+    private void mapRandomizer(Location location) {
+        mInterstingPoints.clear();
+        float zoom = mMap.getCameraPosition().zoom;
+        Log.d(TAG, "Zoom level is:" + zoom);
+        double originLat = location.getLatitude();
+        double originLongi = location.getLongitude();
 
-    private void readList(Location location) {
+        for(int i=0; i< 2000; i++) {
+            double lat = (Math.random()-0.5)/zoom/zoom+originLat;
+            double longi = (Math.random()-0.5)/zoom/zoom+originLongi;
+            double distance_to_us = distance(lat,longi,originLat,originLongi)*1.609344*1000;
+            if(distance_to_us <= 500)
+                mInterstingPoints.add(new LatLng(lat, longi));
+        }
+    }
+
+
+    private void addRandmoHeatMap (Location location) {
+        // Get the data: latitude/longitude positions of police stations.
+        // Create a heat map tile provider, passing it the latlngs of the police stations.
+        mapRandomizer(location);
+        if (mInterstingPoints.size() != 0) {
+            mHeatMapProvider = new HeatmapTileProvider.Builder()
+                    .data(mInterstingPoints)
+                    .gradient(gradient)
+                    .build();
+            // Add a tile overlay to the map, using the heat map tile provider.
+            // Refresh map
+            if (mOverlay != null) mOverlay.remove();
+            mOverlay = mMap.addTileOverlay(new TileOverlayOptions().tileProvider(mHeatMapProvider));
+        }
+    }
+
+
+    private void readList(final Location location) {
         RequestParams params = new RequestParams();
         params.put("phone", "5129037891"); // use "5129037891" or Danny's
         params.put("name", "DL");
@@ -141,7 +190,7 @@ public class MapsActivity extends FragmentActivity implements
                 Log.d(TAG, String.valueOf(jsonArr));
                 try {
                     mInterstingPoints = parseList(jsonArr);
-                    addHeatMap();
+                    addRandmoHeatMap(location);
                 } catch (JSONException e) {
                     e.printStackTrace();
                     Log.d(TAG, "JSON EXCEPTION T T");
@@ -332,6 +381,17 @@ public class MapsActivity extends FragmentActivity implements
             Log.d(TAG, "reloading heatmap");
             readList(location);
         }
+        mLatLng.setText(LocationUtils.getLatLng(this, location));
+        postMyLocation(location.getLatitude(), location.getLongitude());
+        LatLng coordinate = new LatLng(location.getLatitude(), location.getLongitude());
+        CameraUpdate yourLocation = CameraUpdateFactory.newLatLngZoom(coordinate, 17);
+        if(!zoomToMyLocation)
+            mMap.animateCamera(yourLocation);
+            zoomToMyLocation = true;
+
+        Log.d(TAG, "Zoom in at latitude:" + coordinate.latitude + ", longitude: " + coordinate.longitude);
+        Log.d(TAG, "reloading heatmap");
+        readList(location);
     }
 
     public void commitSearch(View button1){
@@ -481,4 +541,23 @@ public class MapsActivity extends FragmentActivity implements
             return mDialog;
         }
     }
+
+
+    private double distance(double lat1, double lon1, double lat2, double lon2) {
+        double theta = lon1 - lon2;
+        double dist = Math.sin(deg2rad(lat1)) * Math.sin(deg2rad(lat2)) + Math.cos(deg2rad(lat1)) * Math.cos(deg2rad(lat2)) * Math.cos(deg2rad(theta));
+        dist = Math.acos(dist);
+        dist = rad2deg(dist);
+        dist = dist * 60 * 1.1515;
+        return (dist);
+    }
+
+    private double deg2rad(double deg) {
+        return (deg * Math.PI / 180.0);
+    }
+
+    private double rad2deg(double rad) {
+        return (rad * 180 / Math.PI);
+    }
+
 }
