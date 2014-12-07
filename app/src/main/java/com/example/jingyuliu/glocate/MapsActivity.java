@@ -1,8 +1,11 @@
 package com.example.jingyuliu.glocate;
 
 import android.app.Dialog;
+import android.widget.Spinner;
+import android.widget.Button;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.View.OnClickListener;
 import android.content.IntentSender;
 import android.content.Intent;
 import android.graphics.Color;
@@ -57,8 +60,6 @@ public class MapsActivity extends FragmentActivity implements
     private LocationRequest mLocationRequest;
     private boolean HeatMapEnabled = false;
     private boolean usingServerData = false;
-    //TelephonyManager tMgr = (TelephonyManager)this.getSystemService(Context.TELEPHONY_SERVICE);
-    //String mPhoneNumber = tMgr.getLine1Number();
 
     // Stores the current instantiation of the location client in this object
     private LocationClient mLocationClient;
@@ -66,6 +67,7 @@ public class MapsActivity extends FragmentActivity implements
 
     private boolean zoomToMyLocation = false;
     private boolean firstTimeInvoked = true;
+    private int init_zoom_level = 13;
 
     private String TAG = "glocate.view";
     private GoogleMap mMap; // Might be null if Google Play services APK is not available.
@@ -126,8 +128,19 @@ public class MapsActivity extends FragmentActivity implements
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
             case R.id.action_settings:
-                Toast.makeText(getApplicationContext(),
-                        "You selected settings!", Toast.LENGTH_SHORT).show();
+                final Dialog settings_dialog = new Dialog(this);
+                settings_dialog.setContentView(R.layout.settings_dialog);
+                settings_dialog.setTitle("Settings");
+                settings_dialog.show();
+                Button OkayButton = (Button) settings_dialog.findViewById(R.id.Okay);
+                OkayButton.setOnClickListener(new OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        Spinner mySpinner = (Spinner) settings_dialog.findViewById(R.id.spinner1);
+                        init_zoom_level = Integer.parseInt(mySpinner.getSelectedItem().toString().replaceAll("[^\\d]", ""));
+                        settings_dialog.dismiss();
+                    }
+                });
                 break;
             case R.id.heatmap:
                 toggleHeatMap();
@@ -389,7 +402,7 @@ public class MapsActivity extends FragmentActivity implements
             else {
                 Address firstresult = foundAddresses.get(0);
                 LatLng newcoordinate = new LatLng(firstresult.getLatitude(), firstresult.getLongitude());
-                CameraUpdate newLocation = CameraUpdateFactory.newLatLngZoom(newcoordinate, 15);
+                CameraUpdate newLocation = CameraUpdateFactory.newLatLngZoom(newcoordinate, init_zoom_level);
                 zoomToMyLocation = false;
                 if (!zoomToMyLocation) {
                     mMap.animateCamera(newLocation);

@@ -9,6 +9,18 @@
     <string name="name">Enter your name</string>
     <string name="Settings">Settings</string>
     <string name="hnt_et_location">Enter Location</string>
+    <string name="mag">Mag.</string>
+
+    <string-array name="zoom_levels">
+        <item>13 (default)</item>
+        <item>1</item>
+        <item>3</item>
+        <item>5</item>
+        <item>7</item>
+        <item>9</item>
+        <item>11</item>
+        <item>15</item>
+    </string-array>
 
     <!-- play service -->
     <string name="latitude_longitude">%1$.8f, %2$.8f</string>
@@ -16,5 +28,6 @@
     <string name="title_activity_login">G-Locate</string>
     <string name="hello_world">Hello world!</string>
     <string name="action_settings">Settings</string>
+    <string name="zoom_levels">Zoom Magnification</string>
 
 </resources>

@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    >
+
+    <TextView
+        android:id="@+id/settings"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginLeft="5dp"
+        android:text="@string/zoom_levels"
+        android:gravity="right"
+        android:textSize="20dp"
+        />
+
+    <Spinner
+        android:id="@+id/spinner1"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:layout_toEndOf="@+id/settings"
+        android:layout_toRightOf="@+id/settings"
+        android:entries="@array/zoom_levels"
+        android:prompt="@string/mag"
+        />
+
+    <Button
+        android:id="@+id/Okay"
+        android:layout_width="100dp"
+        android:layout_height="50dp"
+        android:text="OK"
+        android:layout_below="@+id/spinner1"
+        android:layout_centerHorizontal="true" />
+
+
+
+</RelativeLayout>
