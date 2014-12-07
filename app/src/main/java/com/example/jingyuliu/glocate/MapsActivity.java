@@ -20,7 +20,6 @@ import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.CameraUpdate;
-import com.google.android.gms.maps.model.CircleOptions;
 import com.google.android.gms.maps.model.TileOverlayOptions;
 import com.google.maps.android.heatmaps.Gradient;
 import com.google.maps.android.heatmaps.HeatmapTileProvider;
@@ -48,7 +47,6 @@ import com.google.android.gms.maps.model.TileOverlay;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Locale;
 
 public class MapsActivity extends FragmentActivity implements
         LocationListener,
@@ -58,6 +56,8 @@ public class MapsActivity extends FragmentActivity implements
     // Play service
     // A request to connect to Location Services
     private LocationRequest mLocationRequest;
+    private boolean HeatMapEnabled = false;
+    private boolean usingServerData = false;
     //TelephonyManager tMgr = (TelephonyManager)this.getSystemService(Context.TELEPHONY_SERVICE);
     //String mPhoneNumber = tMgr.getLine1Number();
 
@@ -68,13 +68,13 @@ public class MapsActivity extends FragmentActivity implements
 
     private boolean zoomToMyLocation = false;
     private boolean firstTimeInvoked = true;
-    private Geocoder gc = new Geocoder(this, Locale.US);
 
     private String TAG = "glocate.view";
     private GoogleMap mMap; // Might be null if Google Play services APK is not available.
     private HeatmapTileProvider mHeatMapProvider;
     private TileOverlay mOverlay;
     private List<LatLng> mInterstingPoints;
+    private Geocoder gc;
 
     // Option for heatmap
     // Create the gradient.
@@ -116,7 +116,7 @@ public class MapsActivity extends FragmentActivity implements
          * handle callbacks.
          */
         mLocationClient = new LocationClient(this, this, this);
-
+        gc = new Geocoder(this);
     }
 
     @Override
@@ -133,7 +133,7 @@ public class MapsActivity extends FragmentActivity implements
                         "You selected settings!", Toast.LENGTH_SHORT).show();
                 break;
             case R.id.heatmap:
-                addHeatMap();
+                toggleHeatMap();
                 break;
             default:
                 break;
@@ -148,7 +148,7 @@ public class MapsActivity extends FragmentActivity implements
         double originLat = location.getLatitude();
         double originLongi = location.getLongitude();
 
-        for(int i=0; i< 2000; i++) {
+        for(int i=0; i< 100; i++) {
             double lat = (Math.random()-0.5)/zoom/zoom+originLat;
             double longi = (Math.random()-0.5)/zoom/zoom+originLongi;
             double distance_to_us = distance(lat,longi,originLat,originLongi)*1.609344*1000;
@@ -161,6 +161,8 @@ public class MapsActivity extends FragmentActivity implements
     private void addRandmoHeatMap (Location location) {
         // Get the data: latitude/longitude positions of police stations.
         // Create a heat map tile provider, passing it the latlngs of the police stations.
+        if (HeatMapEnabled==true){
+
         mapRandomizer(location);
         if (mInterstingPoints.size() != 0) {
             mHeatMapProvider = new HeatmapTileProvider.Builder()
@@ -171,6 +173,12 @@ public class MapsActivity extends FragmentActivity implements
             // Refresh map
             if (mOverlay != null) mOverlay.remove();
             mOverlay = mMap.addTileOverlay(new TileOverlayOptions().tileProvider(mHeatMapProvider));
+        }
+    }
+        else{
+            if (mOverlay!=null){
+            mOverlay.remove();
+            }
         }
     }
 
@@ -214,18 +222,8 @@ public class MapsActivity extends FragmentActivity implements
     }
 
 
-    private void addHeatMap() {
-        // Get the data: latitude/longitude positions of police stations.
-        // Create a heat map tile provider, passing it the latlngs of the police stations.
-        mHeatMapProvider = new HeatmapTileProvider.Builder()
-                .data(mInterstingPoints)
-                .build();
-        // Add a tile overlay to the map, using the heat map tile provider.
-        // Refresh map
-        if(mOverlay!=null) {
-            mOverlay.remove();
-        }
-        mOverlay = mMap.addTileOverlay(new TileOverlayOptions().tileProvider(mHeatMapProvider));
+    public boolean toggleHeatMap() {
+        return HeatMapEnabled = !HeatMapEnabled;
     }
     /*
      * Called by Location Services when the request to connect the
@@ -371,27 +369,16 @@ public class MapsActivity extends FragmentActivity implements
             }
             postMyLocation(location.getLatitude(), location.getLongitude());
             LatLng coordinate = new LatLng(location.getLatitude(), location.getLongitude());
-            CameraUpdate yourLocation = CameraUpdateFactory.newLatLngZoom(coordinate, 5);
+            CameraUpdate yourLocation = CameraUpdateFactory.newLatLngZoom(coordinate, 17);
             if (!zoomToMyLocation) {
                 mMap.animateCamera(yourLocation);
                 zoomToMyLocation = true;
             }
 
             Log.d(TAG, "Zoom in at latitude:" + coordinate.latitude + ", longitude: " + coordinate.longitude);
-            Log.d(TAG, "reloading heatmap");
+            Log.d(TAG, "Reloading heatmap");
             readList(location);
         }
-        mLatLng.setText(LocationUtils.getLatLng(this, location));
-        postMyLocation(location.getLatitude(), location.getLongitude());
-        LatLng coordinate = new LatLng(location.getLatitude(), location.getLongitude());
-        CameraUpdate yourLocation = CameraUpdateFactory.newLatLngZoom(coordinate, 17);
-        if(!zoomToMyLocation)
-            mMap.animateCamera(yourLocation);
-            zoomToMyLocation = true;
-
-        Log.d(TAG, "Zoom in at latitude:" + coordinate.latitude + ", longitude: " + coordinate.longitude);
-        Log.d(TAG, "reloading heatmap");
-        readList(location);
     }
 
     public void commitSearch(View button1){
@@ -406,11 +393,6 @@ public class MapsActivity extends FragmentActivity implements
             else {
                 Address firstresult = foundAddresses.get(0);
                 LatLng newcoordinate = new LatLng(firstresult.getLatitude(), firstresult.getLongitude());
-                CircleOptions circleOptions = new CircleOptions()
-                        .center(newcoordinate)
-                        .visible(true)
-                        .radius(10); // In meters
-                mMap.addCircle(circleOptions);
                 CameraUpdate newLocation = CameraUpdateFactory.newLatLngZoom(newcoordinate, 13);
                 mLatLng.setText(Double.toString(firstresult.getLatitude()) + ',' + Double.toString(firstresult.getLongitude()));
                 zoomToMyLocation = false;
@@ -457,25 +439,12 @@ public class MapsActivity extends FragmentActivity implements
         }
 
     /**
-     * This is where we can add markers or lines, add listeners or move the camera. In this case, we
-     * just add a marker near Africa.
+     * This is where we can add markers or lines, add listeners or move the camera.
      * <p/>
      * This should only be called once and when we are sure that {@link #mMap} is not null.
      */
     private void setUpMap() {
-        // Obtains current location coordinates to be fed into circle.
-        // Instantiates a new CircleOptions object and defines the center and radius
-        // Feel free to change properties here! https://developers.google.com/maps/documentation/android/shapes
-        // contains more information about properties.
-//        CircleOptions circleOptions = new CircleOptions()
-//                .center(coordinate)
-//                .visible(true)
-//                .radius(100000); // In meters
-
-        // Get back the mutable Circle
-//        mMap.addCircle(circleOptions);
-//        mMap.addMarker(new MarkerOptions().position(new LatLng(37.4, -122.1)).title("Marker"));
-
+//               does nothing
     }
 
 
@@ -493,14 +462,14 @@ public class MapsActivity extends FragmentActivity implements
             @Override
             public void onSuccess(int statusCode, Header[] headers, JSONObject response) {
                 // If the response is JSONObject instead of expected JSONArray
-                Log.d(TAG, "Fuking yeah.");
+                Log.d(TAG, "Fucking yeah.");
                 Log.d(TAG, String.valueOf(response));
             }
 
             @Override
             public void onSuccess(int statusCode, Header[] headers, JSONArray timeline) {
                 // Pull out the first event on the public timeline
-                Log.d(TAG, "Fuking yeah.");
+                Log.d(TAG, "Fucking yeah.");
             }
         });
     }
