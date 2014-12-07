@@ -54,7 +54,7 @@ public final class LocationUtils {
     public static final int MILLISECONDS_PER_SECOND = 1000;
 
     // The update interval
-    public static final int UPDATE_INTERVAL_IN_SECONDS = 20;
+    public static final int UPDATE_INTERVAL_IN_SECONDS = 10;
 
     // A fast interval ceiling
     public static final int FAST_CEILING_IN_SECONDS = 1;
@@ -81,14 +81,12 @@ public final class LocationUtils {
     public static String getLatLng(Context context, Location currentLocation) {
         // If the location is valid
         if (currentLocation != null) {
-
             // Return the latitude and longitude as strings
             return context.getString(
                     R.string.latitude_longitude,
                     currentLocation.getLatitude(),
                     currentLocation.getLongitude());
         } else {
-
             // Otherwise, return the empty string
             return EMPTY_STRING;
         }

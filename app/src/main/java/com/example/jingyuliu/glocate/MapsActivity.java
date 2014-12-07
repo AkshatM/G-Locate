@@ -35,7 +35,6 @@ import com.google.android.gms.location.LocationRequest;
 
 import android.util.Log;
 import android.widget.AutoCompleteTextView;
-import android.widget.TextView;
 import android.widget.Toast;
 
 import org.apache.http.Header;
@@ -63,7 +62,6 @@ public class MapsActivity extends FragmentActivity implements
 
     // Stores the current instantiation of the location client in this object
     private LocationClient mLocationClient;
-    private TextView mLatLng;
     private AutoCompleteTextView mSearch;
 
     private boolean zoomToMyLocation = false;
@@ -97,7 +95,6 @@ public class MapsActivity extends FragmentActivity implements
         setContentView(R.layout.activity_maps);
         setUpMapIfNeeded();
         mMap.setMyLocationEnabled(true);
-        mLatLng = (TextView) findViewById(R.id.lat_lng);
         mSearch = (AutoCompleteTextView) findViewById(R.id.et_location);
         // Create a new global location parameters object
         mLocationRequest = LocationRequest.create();
@@ -364,12 +361,11 @@ public class MapsActivity extends FragmentActivity implements
         // invoked once, when you open map for the first time.
         if (servicesConnected()) {
             if (firstTimeInvoked) {
-                mLatLng.setText(LocationUtils.getLatLng(this, location));
                 firstTimeInvoked = false;
             }
             postMyLocation(location.getLatitude(), location.getLongitude());
             LatLng coordinate = new LatLng(location.getLatitude(), location.getLongitude());
-            CameraUpdate yourLocation = CameraUpdateFactory.newLatLngZoom(coordinate, 17);
+            CameraUpdate yourLocation = CameraUpdateFactory.newLatLngZoom(coordinate, 15);
             if (!zoomToMyLocation) {
                 mMap.animateCamera(yourLocation);
                 zoomToMyLocation = true;
@@ -393,8 +389,7 @@ public class MapsActivity extends FragmentActivity implements
             else {
                 Address firstresult = foundAddresses.get(0);
                 LatLng newcoordinate = new LatLng(firstresult.getLatitude(), firstresult.getLongitude());
-                CameraUpdate newLocation = CameraUpdateFactory.newLatLngZoom(newcoordinate, 13);
-                mLatLng.setText(Double.toString(firstresult.getLatitude()) + ',' + Double.toString(firstresult.getLongitude()));
+                CameraUpdate newLocation = CameraUpdateFactory.newLatLngZoom(newcoordinate, 15);
                 zoomToMyLocation = false;
                 if (!zoomToMyLocation) {
                     mMap.animateCamera(newLocation);
