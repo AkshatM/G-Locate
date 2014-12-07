@@ -24,12 +24,35 @@
         android:prompt="@string/mag"
         />
 
+    <TextView
+        android:id="@+id/use_server_data"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_alignLeft="@+id/settings"
+        android:layout_alignRight="@id/settings"
+        android:layout_below="@id/settings"
+        android:layout_marginLeft="5dp"
+        android:text="@string/use_server_data"
+        android:gravity="center"
+        android:textSize="20dp"
+        />
+
+    <CheckBox
+        android:id="@+id/checkbox"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_alignLeft="@+id/spinner1"
+        android:layout_alignRight="@id/spinner1"
+        android:text="@string/yes"
+        android:layout_below="@id/settings"
+        android:checked="false" />
+
     <Button
         android:id="@+id/Okay"
         android:layout_width="100dp"
         android:layout_height="50dp"
         android:text="OK"
-        android:layout_below="@+id/spinner1"
+        android:layout_below="@+id/checkbox"
         android:layout_centerHorizontal="true" />
 
 

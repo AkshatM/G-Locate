@@ -3,6 +3,7 @@ package com.example.jingyuliu.glocate;
 import android.app.Dialog;
 import android.widget.Spinner;
 import android.widget.Button;
+import android.widget.CheckBox;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.View.OnClickListener;
@@ -133,11 +134,21 @@ public class MapsActivity extends FragmentActivity implements
                 settings_dialog.setTitle("Settings");
                 settings_dialog.show();
                 Button OkayButton = (Button) settings_dialog.findViewById(R.id.Okay);
+                final CheckBox Checker = (CheckBox) settings_dialog.findViewById(R.id.checkbox);
+                if (usingServerData==true){
+                    Checker.setChecked(true);
+                }
                 OkayButton.setOnClickListener(new OnClickListener() {
                     @Override
                     public void onClick(View v) {
                         Spinner mySpinner = (Spinner) settings_dialog.findViewById(R.id.spinner1);
                         init_zoom_level = Integer.parseInt(mySpinner.getSelectedItem().toString().replaceAll("[^\\d]", ""));
+                        if (Checker.isChecked()){
+                            usingServerData = true;
+                        }
+                        else{
+                            usingServerData = false;
+                        }
                         settings_dialog.dismiss();
                     }
                 });
@@ -171,8 +182,8 @@ public class MapsActivity extends FragmentActivity implements
     private void addRandmoHeatMap (Location location) {
         // Get the data: latitude/longitude positions of police stations.
         // Create a heat map tile provider, passing it the latlngs of the police stations.
+        if (usingServerData==false){
         if (HeatMapEnabled==true){
-
         mapRandomizer(location);
         if (mInterstingPoints.size() != 0) {
             mHeatMapProvider = new HeatmapTileProvider.Builder()
@@ -189,6 +200,10 @@ public class MapsActivity extends FragmentActivity implements
             if (mOverlay!=null){
             mOverlay.remove();
             }
+        }
+    }
+        else{
+            //here, define function to be invoked if server data is to be used.
         }
     }
 

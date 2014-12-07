@@ -29,5 +29,8 @@
     <string name="hello_world">Hello world!</string>
     <string name="action_settings">Settings</string>
     <string name="zoom_levels">Zoom Magnification</string>
+    <string name="use_server_data">Use Server Data</string>
+    <string name="yes">Yes</string>
+
 
 </resources>
