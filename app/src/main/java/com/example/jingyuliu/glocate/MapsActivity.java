@@ -192,44 +192,28 @@ public class MapsActivity extends FragmentActivity implements
     private void addRandmoHeatMap (Location location) {
         // Get the data: latitude/longitude positions.
         // Create a heat map tile provider.
-        if (!usingServerData){
-            if (HeatMapEnabled){
+        // Get the data: latitude/longitude positions.
+        // Create a heat map tile provider.
+        if (HeatMapEnabled) {
+            if (!usingServerData){
                 mapRandomizer(location);
-                if (mInterstingPoints.size() != 0) {
-                    Log.d(TAG, "Moo! " + TextUtils.join(", ", mInterstingPoints));
-                    mHeatMapProvider = new HeatmapTileProvider.Builder()
-                            .data(mInterstingPoints)
-                            .gradient(gradient)
-                            .build();
-                    // Add a tile overlay to the map, using the heat map tile provider.
-                    // Refresh map
-                    if (mOverlay != null) mOverlay.remove();
-                    mOverlay = mMap.addTileOverlay(new TileOverlayOptions().tileProvider(mHeatMapProvider));
-                }
             }
-           else{
-                if (mOverlay!=null){
-                mOverlay.remove();
-                 }
-                }
-            }
-        else{
-            // If usingServerData is true, then this takes mInterstingPoints (assumed to be populated with server calls) and displays it as heatmap.
-            if (mInterstingPoints.size() != 0){
-                Log.d(TAG, "mInterstingPoints is not zero!");
-                Log.d(TAG, "Oink! " + TextUtils.join(", ", mInterstingPoints));
+            if (mInterstingPoints.size() != 0) {
+                Log.d(TAG, "Moo! " + TextUtils.join(", ", mInterstingPoints));
                 mHeatMapProvider = new HeatmapTileProvider.Builder()
-                    .data(mInterstingPoints)
-                    .gradient(gradient)
-                    .build();
-            // Add a tile overlay to the map, using the heat map tile provider.
-            // Refresh map
-            if (mOverlay != null) {
-                mOverlay.remove();
+                        .data(mInterstingPoints)
+                        .gradient(gradient)
+                        .build();
+                // Add a tile overlay to the map, using the heat map tile provider.
+                // Refresh map
+                if (mOverlay != null) mOverlay.remove();
                 mOverlay = mMap.addTileOverlay(new TileOverlayOptions().tileProvider(mHeatMapProvider));
             }
+        } else {
+            if (mOverlay != null) {
+                mOverlay.remove();
+            }
         }
-    }
     }
 
 
