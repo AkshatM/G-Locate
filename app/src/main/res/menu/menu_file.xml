@@ -10,7 +10,7 @@
     </item>
     <item
         android:id="@+id/heatmap"
-        android:title="Heatmap">
+        android:title="Population Heatmap">
     </item>
 
 </menu>

@@ -135,7 +135,7 @@ public class MapsActivity extends FragmentActivity implements
                 settings_dialog.show();
                 Button OkayButton = (Button) settings_dialog.findViewById(R.id.Okay);
                 final CheckBox Checker = (CheckBox) settings_dialog.findViewById(R.id.checkbox);
-                if (usingServerData==true){
+                if (usingServerData){
                     Checker.setChecked(true);
                 }
                 OkayButton.setOnClickListener(new OnClickListener() {
@@ -155,6 +155,15 @@ public class MapsActivity extends FragmentActivity implements
                 break;
             case R.id.heatmap:
                 toggleHeatMap();
+                if (HeatMapEnabled){
+                    Toast.makeText(getApplicationContext(),
+                            "Heat map enabled. Please wait a few minutes for changes to take effect.", Toast.LENGTH_LONG).show();
+                }
+                else
+                {
+                    Toast.makeText(getApplicationContext(),
+                            "Heat map disabled. Please wait a few minutes for changes to take effect.", Toast.LENGTH_LONG).show();
+                }
                 break;
             default:
                 break;
@@ -182,8 +191,8 @@ public class MapsActivity extends FragmentActivity implements
     private void addRandmoHeatMap (Location location) {
         // Get the data: latitude/longitude positions of police stations.
         // Create a heat map tile provider, passing it the latlngs of the police stations.
-        if (usingServerData==false){
-        if (HeatMapEnabled==true){
+        if (!usingServerData){
+        if (HeatMapEnabled){
         mapRandomizer(location);
         if (mInterstingPoints.size() != 0) {
             mHeatMapProvider = new HeatmapTileProvider.Builder()
