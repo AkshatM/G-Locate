@@ -2,6 +2,7 @@ package com.example.jingyuliu.glocate;
 
 import android.app.Dialog;
 import android.widget.Spinner;
+import android.text.TextUtils;
 import android.widget.Button;
 import android.widget.CheckBox;
 import android.view.MenuItem;
@@ -189,12 +190,13 @@ public class MapsActivity extends FragmentActivity implements
 
 
     private void addRandmoHeatMap (Location location) {
-        // Get the data: latitude/longitude positions of police stations.
-        // Create a heat map tile provider, passing it the latlngs of the police stations.
+        // Get the data: latitude/longitude positions.
+        // Create a heat map tile provider.
         if (!usingServerData){
         if (HeatMapEnabled){
-        mapRandomizer(location);
+            mapRandomizer(location);
         if (mInterstingPoints.size() != 0) {
+            Log.d(TAG, "Moo! " + TextUtils.join(", ", mInterstingPoints));
             mHeatMapProvider = new HeatmapTileProvider.Builder()
                     .data(mInterstingPoints)
                     .gradient(gradient)
@@ -212,18 +214,31 @@ public class MapsActivity extends FragmentActivity implements
         }
     }
         else{
-            //here, define function to be invoked if server data is to be used.
+            if (mInterstingPoints.size() != 0){
+                Log.d(TAG, "mInterstingPoints is not zero!");
+                Log.d(TAG, "Oink! " + TextUtils.join(", ", mInterstingPoints));
+            mHeatMapProvider = new HeatmapTileProvider.Builder()
+                    .data(mInterstingPoints)
+                    .gradient(gradient)
+                    .build();
+            // Add a tile overlay to the map, using the heat map tile provider.
+            // Refresh map
+            if (mOverlay != null) {
+                mOverlay.remove();
+                mOverlay = mMap.addTileOverlay(new TileOverlayOptions().tileProvider(mHeatMapProvider));
+            }
         }
+    }
     }
 
 
     private void readList(final Location location) {
         RequestParams params = new RequestParams();
-        params.put("phone", "5129037891"); // use "5129037891" or Danny's
-        params.put("name", "DL");
-        params.put("email", "ljy1681@gmail.com");
-        params.put("longitude", location.getLatitude());
-        params.put("latitude", location.getLongitude());
+        //params.put("phone", "5129037891"); // use "5129037891" or Danny's number
+        //params.put("name", "DL");
+        //params.put("email", "ljy1681@gmail.com");
+        //params.put("longitude", location.getLatitude());
+        //params.put("latitude", location.getLongitude());
         MyFuckingClient.get("around/me", params, new JsonHttpResponseHandler() {
             @Override
             public void onSuccess(int statusCode, Header[] headers, JSONArray jsonArr) {
@@ -249,9 +264,10 @@ public class MapsActivity extends FragmentActivity implements
             double lat, longi;
             lat = Double.parseDouble((jsonobj.get("latitude").toString()));
             longi = Double.parseDouble(jsonobj.get("longitude").toString());
-            Log.d(TAG, i + "th " + String.valueOf(lat) + ' ' + String.valueOf(longi));
+            Log.d(TAG, i + "th " + " lat " + String.valueOf(lat) + " longi " + String.valueOf(longi));
             list.add(new LatLng(lat, longi));
         }
+        Log.d(TAG, "Meow! " + TextUtils.join(", ", list));
         return list;
     }
 
@@ -396,11 +412,11 @@ public class MapsActivity extends FragmentActivity implements
     @Override
     public void onLocationChanged(Location location) {
         // invoked once, when you open map for the first time.
-        if (servicesConnected()) {
             if (firstTimeInvoked) {
                 firstTimeInvoked = false;
             }
-            postMyLocation(location.getLatitude(), location.getLongitude());
+            postMyLocation(location.getLongitude(),location.getLatitude());
+            Log.d(TAG, "Woof! " + " long " + location.getLongitude() + " lat " + location.getLatitude());
             LatLng coordinate = new LatLng(location.getLatitude(), location.getLongitude());
             CameraUpdate yourLocation = CameraUpdateFactory.newLatLngZoom(coordinate, 15);
             if (!zoomToMyLocation) {
@@ -412,7 +428,6 @@ public class MapsActivity extends FragmentActivity implements
             Log.d(TAG, "Reloading heatmap");
             readList(location);
         }
-    }
 
     public void commitSearch(View button1){
         //When button is pressed, it performs this action.
@@ -501,7 +516,7 @@ public class MapsActivity extends FragmentActivity implements
             @Override
             public void onSuccess(int statusCode, Header[] headers, JSONArray timeline) {
                 // Pull out the first event on the public timeline
-                Log.d(TAG, "Fucking yeah.");
+                Log.d(TAG, "Fuking yeah.");
             }
         });
     }
