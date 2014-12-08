@@ -193,31 +193,32 @@ public class MapsActivity extends FragmentActivity implements
         // Get the data: latitude/longitude positions.
         // Create a heat map tile provider.
         if (!usingServerData){
-        if (HeatMapEnabled){
-            mapRandomizer(location);
-        if (mInterstingPoints.size() != 0) {
-            Log.d(TAG, "Moo! " + TextUtils.join(", ", mInterstingPoints));
-            mHeatMapProvider = new HeatmapTileProvider.Builder()
-                    .data(mInterstingPoints)
-                    .gradient(gradient)
-                    .build();
-            // Add a tile overlay to the map, using the heat map tile provider.
-            // Refresh map
-            if (mOverlay != null) mOverlay.remove();
-            mOverlay = mMap.addTileOverlay(new TileOverlayOptions().tileProvider(mHeatMapProvider));
-        }
-    }
-        else{
-            if (mOverlay!=null){
-            mOverlay.remove();
+            if (HeatMapEnabled){
+                mapRandomizer(location);
+                if (mInterstingPoints.size() != 0) {
+                    Log.d(TAG, "Moo! " + TextUtils.join(", ", mInterstingPoints));
+                    mHeatMapProvider = new HeatmapTileProvider.Builder()
+                            .data(mInterstingPoints)
+                            .gradient(gradient)
+                            .build();
+                    // Add a tile overlay to the map, using the heat map tile provider.
+                    // Refresh map
+                    if (mOverlay != null) mOverlay.remove();
+                    mOverlay = mMap.addTileOverlay(new TileOverlayOptions().tileProvider(mHeatMapProvider));
+                }
             }
-        }
-    }
+           else{
+                if (mOverlay!=null){
+                mOverlay.remove();
+                 }
+                }
+            }
         else{
+            // If usingServerData is true, then this takes mInterstingPoints (assumed to be populated with server calls) and displays it as heatmap.
             if (mInterstingPoints.size() != 0){
                 Log.d(TAG, "mInterstingPoints is not zero!");
                 Log.d(TAG, "Oink! " + TextUtils.join(", ", mInterstingPoints));
-            mHeatMapProvider = new HeatmapTileProvider.Builder()
+                mHeatMapProvider = new HeatmapTileProvider.Builder()
                     .data(mInterstingPoints)
                     .gradient(gradient)
                     .build();
@@ -248,6 +249,7 @@ public class MapsActivity extends FragmentActivity implements
                 try {
                     mInterstingPoints = parseList(jsonArr);
                     addRandmoHeatMap(location);
+                    Log.d(TAG, "Bubble! " + TextUtils.join(", ", mInterstingPoints));
                 } catch (JSONException e) {
                     e.printStackTrace();
                     Log.d(TAG, "JSON EXCEPTION T T");
