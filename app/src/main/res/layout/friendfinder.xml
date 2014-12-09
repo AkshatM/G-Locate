@@ -7,7 +7,7 @@
         android:id="@+id/friend_search"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:inputType="text"
+        android:inputType="phone"
         android:hint="@string/friend_search_text"
         android:layout_centerHorizontal="true"/>
 
