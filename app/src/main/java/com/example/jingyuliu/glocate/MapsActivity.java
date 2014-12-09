@@ -182,7 +182,6 @@ public class MapsActivity extends FragmentActivity implements
                 searchButton.setOnClickListener(new OnClickListener() {
                     @Override
                     public void onClick(View v) {
-
                         friend_dialog.dismiss();
                     }
                 });
