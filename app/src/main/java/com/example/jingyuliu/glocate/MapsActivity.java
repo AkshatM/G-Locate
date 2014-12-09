@@ -405,6 +405,7 @@ public class MapsActivity extends FragmentActivity implements
             postMyLocation(location.getLongitude(),location.getLatitude());
             Log.d(TAG, "Woof! " + " long " + location.getLongitude() + " lat " + location.getLatitude());
             LatLng coordinate = new LatLng(location.getLatitude(), location.getLongitude());
+            newlocation = coordinate;
             CameraUpdate yourLocation = CameraUpdateFactory.newLatLngZoom(coordinate, 15);
             if (!zoomToMyLocation) {
                 mMap.animateCamera(yourLocation);
