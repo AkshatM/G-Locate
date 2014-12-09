@@ -7,10 +7,12 @@ import android.widget.Button;
 import android.widget.CheckBox;
 import android.view.MenuItem;
 import android.view.View;
+import android.app.AlertDialog;
 import android.view.View.OnClickListener;
 import android.content.IntentSender;
 import android.content.Intent;
 import android.graphics.Color;
+import android.content.DialogInterface;
 import android.location.Location;
 import android.location.Geocoder;
 import android.location.Address;
@@ -76,6 +78,7 @@ public class MapsActivity extends FragmentActivity implements
     private HeatmapTileProvider mHeatMapProvider;
     private TileOverlay mOverlay;
     private List<LatLng> mInterstingPoints;
+    private LatLng newlocation;
     private Geocoder gc;
 
     // Option for heatmap
@@ -172,31 +175,28 @@ public class MapsActivity extends FragmentActivity implements
         return true;
     }
 
-    private void mapRandomizer(Location location) {
+    private void mapRandomizer(double latitude, double longitude) {
         mInterstingPoints.clear();
         float zoom = mMap.getCameraPosition().zoom;
         Log.d(TAG, "Zoom level is:" + zoom);
-        double originLat = location.getLatitude();
-        double originLongi = location.getLongitude();
-
         for(int i=0; i< 100; i++) {
-            double lat = (Math.random()-0.5)/zoom/zoom+originLat;
-            double longi = (Math.random()-0.5)/zoom/zoom+originLongi;
-            double distance_to_us = distance(lat,longi,originLat,originLongi)*1.609344*1000;
+            double lat = (Math.random()-0.5)/zoom/zoom+latitude;
+            double longi = (Math.random()-0.5)/zoom/zoom+longitude;
+            double distance_to_us = distance(lat,longi,latitude,longitude)*1.609344*1000;
             if(distance_to_us <= 500)
                 mInterstingPoints.add(new LatLng(lat, longi));
         }
     }
 
 
-    private void addRandmoHeatMap (Location location) {
+    private void addRandmoHeatMap (double latitude, double longitude) {
         // Get the data: latitude/longitude positions.
         // Create a heat map tile provider.
         // Get the data: latitude/longitude positions.
         // Create a heat map tile provider.
         if (HeatMapEnabled) {
             if (!usingServerData){
-                mapRandomizer(location);
+                mapRandomizer(latitude, longitude);
             }
             if (mInterstingPoints.size() != 0) {
                 Log.d(TAG, "Moo! " + TextUtils.join(", ", mInterstingPoints));
@@ -232,7 +232,12 @@ public class MapsActivity extends FragmentActivity implements
                 Log.d(TAG, String.valueOf(jsonArr));
                 try {
                     mInterstingPoints = parseList(jsonArr);
-                    addRandmoHeatMap(location);
+                    if (firstTimeInvoked) {
+                        addRandmoHeatMap(location.getLatitude(), location.getLongitude());
+                    }
+                    else {
+                        addRandmoHeatMap(newlocation.latitude, newlocation.longitude);
+                    }
                     Log.d(TAG, "Bubble! " + TextUtils.join(", ", mInterstingPoints));
                 } catch (JSONException e) {
                     e.printStackTrace();
@@ -256,7 +261,6 @@ public class MapsActivity extends FragmentActivity implements
         Log.d(TAG, "Meow! " + TextUtils.join(", ", list));
         return list;
     }
-
 
     public boolean toggleHeatMap() {
         return HeatMapEnabled = !HeatMapEnabled;
@@ -398,9 +402,6 @@ public class MapsActivity extends FragmentActivity implements
     @Override
     public void onLocationChanged(Location location) {
         // invoked once, when you open map for the first time.
-            if (firstTimeInvoked) {
-                firstTimeInvoked = false;
-            }
             postMyLocation(location.getLongitude(),location.getLatitude());
             Log.d(TAG, "Woof! " + " long " + location.getLongitude() + " lat " + location.getLatitude());
             LatLng coordinate = new LatLng(location.getLatitude(), location.getLongitude());
@@ -419,19 +420,38 @@ public class MapsActivity extends FragmentActivity implements
         //When button is pressed, it performs this action.
         String address = mSearch.getText().toString();
         try {
-            List<Address> foundAddresses = gc.getFromLocationName(address, 1); // Search addresses
-            if (foundAddresses==null||foundAddresses.isEmpty()){
+            final List<Address> foundAddresses = gc.getFromLocationName(address, 5); // Search addresses
+            if (foundAddresses == null || foundAddresses.isEmpty()) {
                 Toast.makeText(getApplicationContext(),
                         "Address does not exist", Toast.LENGTH_LONG).show();
-            }
-            else {
-                Address firstresult = foundAddresses.get(0);
-                LatLng newcoordinate = new LatLng(firstresult.getLatitude(), firstresult.getLongitude());
-                CameraUpdate newLocation = CameraUpdateFactory.newLatLngZoom(newcoordinate, init_zoom_level);
-                zoomToMyLocation = false;
-                if (!zoomToMyLocation) {
-                    mMap.animateCamera(newLocation);
-                    zoomToMyLocation = true;
+            } else {
+                AlertDialog.Builder alertDialogbuilder = new AlertDialog.Builder(this);
+                alertDialogbuilder.setTitle("Pick your location");
+                final CharSequence[] dynamite = parseResults(foundAddresses);
+                alertDialogbuilder.setItems(parseResults(foundAddresses), new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int which) {
+                        mSearch.setText(dynamite[which]);
+                        try{
+                            Address firstresult = foundAddresses.get(which);
+                            LatLng newcoordinate = new LatLng(firstresult.getLatitude(), firstresult.getLongitude());
+                            Log.d(TAG, "Gogo "+ firstresult.getLatitude() + " " + firstresult.getLongitude());
+                            newlocation = newcoordinate;
+                            CameraUpdate newLocation = CameraUpdateFactory.newLatLngZoom(newcoordinate, init_zoom_level);
+                            zoomToMyLocation = false;
+                            if (!zoomToMyLocation) {
+                                mMap.animateCamera(newLocation);
+                                zoomToMyLocation = true;
+                            }
+                        }
+                        catch (Exception IOException){
+                            //implement whatever is necessary, but otherwise do nothing
+                        }
+                    }
+                });
+                AlertDialog alertDialog2 = alertDialogbuilder.create();
+                alertDialog2.show();
+                if (firstTimeInvoked) {
+                    firstTimeInvoked = false;
                 }
             }
         }
@@ -439,6 +459,30 @@ public class MapsActivity extends FragmentActivity implements
         {
             // Do nothing
         }
+    }
+
+    public CharSequence[] parseResults (List<Address> listable){//should return CharSequence
+        // parse list of address to form a coherent character sequence for alert dialog box
+        ArrayList<String> cutelist = new ArrayList<String>();
+        for(int i = 0; i < listable.size(); i++) {
+            Address Cool = listable.get(i);
+            String sum = "";
+            for (int j = 0;true;j++) {
+                if (Cool.getAddressLine(j) != null) {
+                    if (j == 0){
+                        sum = sum + Cool.getAddressLine(j);
+                    }
+                    else {
+                        sum = sum + ", " + Cool.getAddressLine(j);
+                    }
+                } else {
+                    break;
+                }
+            }
+            cutelist.add(sum);
+        }
+        CharSequence[] desiredSequence = cutelist.toArray(new CharSequence[cutelist.size()]);
+        return desiredSequence;
     }
 
     /**
