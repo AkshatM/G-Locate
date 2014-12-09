@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <EditText
+        android:id="@+id/friend_search"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:inputType="text"
+        android:hint="@string/friend_search_text"
+        android:layout_centerHorizontal="true"/>
+
+    <Button
+        android:id="@+id/friend_search_btn"
+        android:layout_width="100dp"
+        android:layout_height="50dp"
+        android:text="@string/str_btn_find"
+        android:layout_below="@+id/friend_search"
+        android:layout_centerHorizontal="true" />
+
+</RelativeLayout>

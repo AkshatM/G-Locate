@@ -11,6 +11,9 @@
     <string name="hnt_et_location">Enter Location</string>
     <string name="mag">Mag.</string>
 
+    <string name="friend_find">Friend Finder</string>
+    <string name="friend_search_text">Enter friend\'s phone number</string>
+
     <string-array name="zoom_levels">
         <item>13 (default)</item>
         <item>1</item>

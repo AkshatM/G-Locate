@@ -1,6 +1,7 @@
 package com.example.jingyuliu.glocate;
 
 import android.app.Dialog;
+import android.widget.EditText;
 import android.widget.Spinner;
 import android.text.TextUtils;
 import android.widget.Button;
@@ -54,7 +55,6 @@ import com.google.android.gms.maps.model.TileOverlay;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
 
 public class MapsActivity extends FragmentActivity implements
@@ -172,6 +172,20 @@ public class MapsActivity extends FragmentActivity implements
                             "Heat map disabled. Please wait a few minutes for changes to take effect.", Toast.LENGTH_LONG).show();
                 }
                 break;
+            case R.id.friend_finder:
+                final Dialog friend_dialog = new Dialog(this);
+                friend_dialog.setContentView(R.layout.friendfinder);
+                friend_dialog.setTitle("Friend Finder");
+                friend_dialog.show();
+                Button searchButton = (Button) friend_dialog.findViewById(R.id.friend_search_btn);
+
+                searchButton.setOnClickListener(new OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+
+                        friend_dialog.dismiss();
+                    }
+                });
             default:
                 break;
         }
@@ -448,9 +462,9 @@ public class MapsActivity extends FragmentActivity implements
                                 mMap.animateCamera(newLocation);
                                 mMap.clear();
                                 mMap.addMarker(new MarkerOptions()
-                                                .position(newcoordinate)
-                                                .title(dynamite[which].toString())
-                                                .draggable(false));
+                                        .position(newcoordinate)
+                                        .title(dynamite[which].toString())
+                                        .draggable(false));
                                 zoomToMyLocation = true;
                             }
                         }

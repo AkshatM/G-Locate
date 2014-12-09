@@ -12,5 +12,9 @@
         android:id="@+id/heatmap"
         android:title="Population Heatmap">
     </item>
+    <item
+        android:id="@+id/friend_finder"
+        android:title="Friend Finder">
+    </item>
 
 </menu>
