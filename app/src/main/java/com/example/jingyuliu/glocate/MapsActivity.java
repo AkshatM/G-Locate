@@ -54,6 +54,9 @@ import com.google.android.gms.maps.model.TileOverlay;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.MarkerOptions;
+
 public class MapsActivity extends FragmentActivity implements
         LocationListener,
         GooglePlayServicesClient.ConnectionCallbacks,
@@ -443,6 +446,11 @@ public class MapsActivity extends FragmentActivity implements
                             zoomToMyLocation = false;
                             if (!zoomToMyLocation) {
                                 mMap.animateCamera(newLocation);
+                                mMap.clear();
+                                mMap.addMarker(new MarkerOptions()
+                                                .position(newcoordinate)
+                                                .title(dynamite[which].toString())
+                                                .draggable(false));
                                 zoomToMyLocation = true;
                             }
                         }
