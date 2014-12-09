@@ -232,12 +232,12 @@ public class MapsActivity extends FragmentActivity implements
                 Log.d(TAG, String.valueOf(jsonArr));
                 try {
                     mInterstingPoints = parseList(jsonArr);
-                    if (firstTimeInvoked) {
-                        addRandmoHeatMap(location.getLatitude(), location.getLongitude());
-                    }
-                    else {
+                    //if (firstTimeInvoked) {
+                    //    addRandmoHeatMap(location.getLatitude(), location.getLongitude());
+                    //}
+                    //else {
                         addRandmoHeatMap(newlocation.latitude, newlocation.longitude);
-                    }
+                    //}
                     Log.d(TAG, "Bubble! " + TextUtils.join(", ", mInterstingPoints));
                 } catch (JSONException e) {
                     e.printStackTrace();
@@ -405,7 +405,9 @@ public class MapsActivity extends FragmentActivity implements
             postMyLocation(location.getLongitude(),location.getLatitude());
             Log.d(TAG, "Woof! " + " long " + location.getLongitude() + " lat " + location.getLatitude());
             LatLng coordinate = new LatLng(location.getLatitude(), location.getLongitude());
-            newlocation = coordinate;
+            if (firstTimeInvoked){
+               newlocation = coordinate;
+            }
             CameraUpdate yourLocation = CameraUpdateFactory.newLatLngZoom(coordinate, 15);
             if (!zoomToMyLocation) {
                 mMap.animateCamera(yourLocation);
@@ -435,7 +437,7 @@ public class MapsActivity extends FragmentActivity implements
                         try{
                             Address firstresult = foundAddresses.get(which);
                             LatLng newcoordinate = new LatLng(firstresult.getLatitude(), firstresult.getLongitude());
-                            Log.d(TAG, "Gogo "+ firstresult.getLatitude() + " " + firstresult.getLongitude());
+                            firstTimeInvoked = false;
                             newlocation = newcoordinate;
                             CameraUpdate newLocation = CameraUpdateFactory.newLatLngZoom(newcoordinate, init_zoom_level);
                             zoomToMyLocation = false;
@@ -451,9 +453,6 @@ public class MapsActivity extends FragmentActivity implements
                 });
                 AlertDialog alertDialog2 = alertDialogbuilder.create();
                 alertDialog2.show();
-                if (firstTimeInvoked) {
-                    firstTimeInvoked = false;
-                }
             }
         }
         catch (Exception e)
