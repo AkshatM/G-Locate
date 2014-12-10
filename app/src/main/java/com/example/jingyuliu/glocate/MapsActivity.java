@@ -28,7 +28,6 @@ import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.CameraUpdate;
-import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.TileOverlayOptions;
 import com.google.maps.android.heatmaps.Gradient;
 import com.google.maps.android.heatmaps.HeatmapTileProvider;
@@ -57,6 +56,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.google.android.gms.maps.model.MarkerOptions;
+import com.google.android.gms.maps.model.Marker;
 
 public class MapsActivity extends FragmentActivity implements
         LocationListener,
@@ -72,7 +72,7 @@ public class MapsActivity extends FragmentActivity implements
     // Stores the current instantiation of the location client in this object
     private LocationClient mLocationClient;
     private AutoCompleteTextView mSearch;
-    private Marker marker;
+    private Marker mymarker;
 
     private boolean zoomToMyLocation = false;
     private boolean firstTimeInvoked = true;
@@ -255,9 +255,11 @@ public class MapsActivity extends FragmentActivity implements
                     zoomToMyLocation = false;
                     if (!zoomToMyLocation) {
                         mMap.animateCamera(newLocation);
-                        //mMap.clear();
-                        marker = mMap.addMarker(new MarkerOptions()
+                        if(mymarker != null)
+                            mymarker.remove();
+                        mymarker = mMap.addMarker(new MarkerOptions()
                                 .position(newcoordinate)
+                                .title(jsonobj.get("name").toString())
                                 .draggable(false));
                         zoomToMyLocation = true;
                     }
