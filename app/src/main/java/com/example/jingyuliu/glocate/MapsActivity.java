@@ -243,6 +243,7 @@ public class MapsActivity extends FragmentActivity implements
             @Override
             public void onSuccess(int statusCode, Header[] headers, JSONArray jsonArr) {
                 // Pull out the first event on the public timeline
+
                 Toast.makeText(getApplicationContext(),phone_num, Toast.LENGTH_LONG).show();
                 Log.d(TAG, "Posting route success array");
                 Log.d(TAG, String.valueOf(jsonArr));
