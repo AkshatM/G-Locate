@@ -1,7 +1,6 @@
 package com.example.jingyuliu.glocate;
 
 import android.app.Dialog;
-import android.provider.ContactsContract;
 import android.widget.EditText;
 import android.widget.Spinner;
 import android.text.TextUtils;
@@ -72,7 +71,6 @@ public class MapsActivity extends FragmentActivity implements
     // Stores the current instantiation of the location client in this object
     private LocationClient mLocationClient;
     private AutoCompleteTextView mSearch;
-    private EditText fSearch;
 
     private boolean zoomToMyLocation = false;
     private boolean firstTimeInvoked = true;
@@ -239,12 +237,11 @@ public class MapsActivity extends FragmentActivity implements
 
     private void findFriend(final String phone_num) {
         RequestParams params = new RequestParams();
-        Toast.makeText(getApplicationContext(),phone_num, Toast.LENGTH_LONG).show();
         MyFuckingClient.get("find/" + phone_num, params, new JsonHttpResponseHandler() {
             @Override
             public void onSuccess(int statusCode, Header[] headers, JSONObject jsonobj) {
                 // Pull out the first event on the public timeline
-                Log.d(TAG, "Posting route success array");
+                Log.d(TAG, "FindFriend - Posting route success array");
                 Log.d(TAG, String.valueOf(jsonobj));
                 try {
                     double lat = Double.parseDouble((jsonobj.get("latitude").toString()));
@@ -259,16 +256,18 @@ public class MapsActivity extends FragmentActivity implements
                         mMap.clear();
                         mMap.addMarker(new MarkerOptions()
                                 .position(newcoordinate)
-                                .title(phone_num.toString())
                                 .draggable(false));
                         zoomToMyLocation = true;
                     }
                 } catch (JSONException e) {
                     e.printStackTrace();
                     Log.d(TAG, "JSON EXCEPTION T T");
-                    Toast.makeText(getApplicationContext(),
-                            "No friend with that number in the database", Toast.LENGTH_LONG).show();
                 }
+            }
+            @Override
+            public void onFailure(int statusCode, Header[] headers, Throwable throwable, JSONObject errorResponse) {
+                Toast.makeText(getApplicationContext(),
+                        "No friend with that number in database", Toast.LENGTH_LONG).show();
             }
         });
 
