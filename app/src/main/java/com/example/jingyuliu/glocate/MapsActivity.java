@@ -239,19 +239,19 @@ public class MapsActivity extends FragmentActivity implements
 
     private void findFriend(final String phone_num) {
         RequestParams params = new RequestParams();
+        Toast.makeText(getApplicationContext(),phone_num, Toast.LENGTH_LONG).show();
         MyFuckingClient.get("find/" + phone_num, params, new JsonHttpResponseHandler() {
             @Override
-            public void onSuccess(int statusCode, Header[] headers, JSONArray jsonArr) {
+            public void onSuccess(int statusCode, Header[] headers, JSONObject jsonobj) {
                 // Pull out the first event on the public timeline
-
-                Toast.makeText(getApplicationContext(),phone_num, Toast.LENGTH_LONG).show();
                 Log.d(TAG, "Posting route success array");
-                Log.d(TAG, String.valueOf(jsonArr));
+                Log.d(TAG, String.valueOf(jsonobj));
                 try {
-                    mInterstingPoints = parseList(jsonArr);
-                    Log.d(TAG, "Friend! " + TextUtils.join(", ", mInterstingPoints));
+                    double lat = Double.parseDouble((jsonobj.get("latitude").toString()));
+                    double lon = Double.parseDouble(jsonobj.get("longitude").toString());
+                    LatLng newcoordinate = new LatLng(lat, lon);
+                    Log.d(TAG, "Friend! " + newcoordinate.toString());
                     //add marker + change location
-                    LatLng newcoordinate = mInterstingPoints.get(0);
                     CameraUpdate newLocation = CameraUpdateFactory.newLatLngZoom(newcoordinate, init_zoom_level);
                     zoomToMyLocation = false;
                     if (!zoomToMyLocation) {
