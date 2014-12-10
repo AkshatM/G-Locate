@@ -28,6 +28,7 @@ import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.CameraUpdate;
+import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.TileOverlayOptions;
 import com.google.maps.android.heatmaps.Gradient;
 import com.google.maps.android.heatmaps.HeatmapTileProvider;
@@ -71,6 +72,7 @@ public class MapsActivity extends FragmentActivity implements
     // Stores the current instantiation of the location client in this object
     private LocationClient mLocationClient;
     private AutoCompleteTextView mSearch;
+    private Marker marker;
 
     private boolean zoomToMyLocation = false;
     private boolean firstTimeInvoked = true;
@@ -253,8 +255,11 @@ public class MapsActivity extends FragmentActivity implements
                     zoomToMyLocation = false;
                     if (!zoomToMyLocation) {
                         mMap.animateCamera(newLocation);
-                        mMap.clear();
-                        mMap.addMarker(new MarkerOptions()
+                        //mMap.clear();
+                        if (marker!=null){
+                            marker.remove();
+                        }
+                        marker = mMap.addMarker(new MarkerOptions()
                                 .position(newcoordinate)
                                 .draggable(false));
                         zoomToMyLocation = true;
