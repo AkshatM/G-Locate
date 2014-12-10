@@ -264,8 +264,8 @@ public class MapsActivity extends FragmentActivity implements
                     Log.d(TAG, "JSON EXCEPTION T T");
                 }
             }
-            @Override
-            public void onFailure(int statusCode, Header[] headers, Throwable throwable, JSONObject errorResponse) {
+            public void onFailure(int statusCode, Header[] headers, String jsonresponse, Throwable throwable) {
+                Log.d(TAG, "Friendly fire! Friendly fire!");
                 Toast.makeText(getApplicationContext(),
                         "No friend with that number in database", Toast.LENGTH_LONG).show();
             }
