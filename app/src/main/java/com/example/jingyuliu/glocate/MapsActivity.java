@@ -1,6 +1,7 @@
 package com.example.jingyuliu.glocate;
 
 import android.app.Dialog;
+import android.provider.ContactsContract;
 import android.widget.EditText;
 import android.widget.Spinner;
 import android.text.TextUtils;
@@ -71,6 +72,7 @@ public class MapsActivity extends FragmentActivity implements
     // Stores the current instantiation of the location client in this object
     private LocationClient mLocationClient;
     private AutoCompleteTextView mSearch;
+    private EditText fSearch;
 
     private boolean zoomToMyLocation = false;
     private boolean firstTimeInvoked = true;
@@ -106,6 +108,7 @@ public class MapsActivity extends FragmentActivity implements
         setUpMapIfNeeded();
         mMap.setMyLocationEnabled(true);
         mSearch = (AutoCompleteTextView) findViewById(R.id.et_location);
+
         // Create a new global location parameters object
         mLocationRequest = LocationRequest.create();
         /*
@@ -178,10 +181,12 @@ public class MapsActivity extends FragmentActivity implements
                 friend_dialog.setTitle("Friend Finder");
                 friend_dialog.show();
                 Button searchButton = (Button) friend_dialog.findViewById(R.id.friend_search_btn);
-
+                final EditText edit = (EditText) friend_dialog.findViewById(R.id.friend_search);
                 searchButton.setOnClickListener(new OnClickListener() {
                     @Override
                     public void onClick(View v) {
+                        final String phone_number = edit.getText().toString();
+                        findFriend(phone_number);
                         friend_dialog.dismiss();
                     }
                 });
@@ -230,6 +235,43 @@ public class MapsActivity extends FragmentActivity implements
                 mOverlay.remove();
             }
         }
+    }
+
+    private void findFriend(final String phone_num) {
+        RequestParams params = new RequestParams();
+        MyFuckingClient.get("find/" + phone_num, params, new JsonHttpResponseHandler() {
+            @Override
+            public void onSuccess(int statusCode, Header[] headers, JSONArray jsonArr) {
+                // Pull out the first event on the public timeline
+                Toast.makeText(getApplicationContext(),phone_num, Toast.LENGTH_LONG).show();
+                Log.d(TAG, "Posting route success array");
+                Log.d(TAG, String.valueOf(jsonArr));
+                try {
+                    mInterstingPoints = parseList(jsonArr);
+                    Log.d(TAG, "Friend! " + TextUtils.join(", ", mInterstingPoints));
+                    //add marker + change location
+                    LatLng newcoordinate = mInterstingPoints.get(0);
+                    CameraUpdate newLocation = CameraUpdateFactory.newLatLngZoom(newcoordinate, init_zoom_level);
+                    zoomToMyLocation = false;
+                    if (!zoomToMyLocation) {
+                        mMap.animateCamera(newLocation);
+                        mMap.clear();
+                        mMap.addMarker(new MarkerOptions()
+                                .position(newcoordinate)
+                                .title(phone_num.toString())
+                                .draggable(false));
+                        zoomToMyLocation = true;
+                    }
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                    Log.d(TAG, "JSON EXCEPTION T T");
+                    Toast.makeText(getApplicationContext(),
+                            "No friend with that number in the database", Toast.LENGTH_LONG).show();
+                }
+            }
+        });
+
+
     }
 
 
