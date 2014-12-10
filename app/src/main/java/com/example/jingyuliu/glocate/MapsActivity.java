@@ -256,9 +256,6 @@ public class MapsActivity extends FragmentActivity implements
                     if (!zoomToMyLocation) {
                         mMap.animateCamera(newLocation);
                         //mMap.clear();
-                        if (marker!=null){
-                            marker.remove();
-                        }
                         marker = mMap.addMarker(new MarkerOptions()
                                 .position(newcoordinate)
                                 .draggable(false));
