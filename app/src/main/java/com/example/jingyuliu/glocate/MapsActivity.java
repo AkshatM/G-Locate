@@ -3,7 +3,6 @@ package com.example.jingyuliu.glocate;
 import android.app.Dialog;
 import android.widget.EditText;
 import android.widget.Spinner;
-import android.text.TextUtils;
 import android.widget.Button;
 import android.widget.CheckBox;
 import android.view.MenuItem;
@@ -12,6 +11,7 @@ import android.app.AlertDialog;
 import android.view.View.OnClickListener;
 import android.content.IntentSender;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.content.DialogInterface;
 import android.location.Location;
@@ -22,7 +22,6 @@ import android.support.v4.app.FragmentActivity;
 import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuInflater;
-
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
@@ -34,28 +33,22 @@ import com.google.maps.android.heatmaps.Gradient;
 import com.google.maps.android.heatmaps.HeatmapTileProvider;
 import com.loopj.android.http.JsonHttpResponseHandler;
 import com.loopj.android.http.RequestParams;
-
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GooglePlayServicesClient;
 import com.google.android.gms.common.GooglePlayServicesUtil;
 import com.google.android.gms.location.LocationClient;
 import com.google.android.gms.location.LocationListener;
 import com.google.android.gms.location.LocationRequest;
-
 import android.util.Log;
 import android.widget.AutoCompleteTextView;
 import android.widget.Toast;
-
 import org.apache.http.Header;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
-
 import com.google.android.gms.maps.model.TileOverlay;
-
 import java.util.ArrayList;
 import java.util.List;
-
 import com.google.android.gms.maps.model.MarkerOptions;
 
 public class MapsActivity extends FragmentActivity implements
@@ -66,25 +59,25 @@ public class MapsActivity extends FragmentActivity implements
     // Play service
     // A request to connect to Location Services
     private LocationRequest mLocationRequest;
-    private boolean HeatMapEnabled = false;
-    private boolean usingServerData = false;
 
     // Stores the current instantiation of the location client in this object
     private LocationClient mLocationClient;
-    private AutoCompleteTextView mSearch;
-    private Marker marker;
-
-    private boolean zoomToMyLocation = false;
-    private boolean firstTimeInvoked = true;
-    private int init_zoom_level = 13;
-
+    
+    private AutoCompleteTextView mSearch; //AutoComplete text view identifier in activity_maps
+    private boolean HeatMapEnabled = false; //controls if heat map is on or off
+    private boolean usingServerData = false; // controls what data heat map uses.
+    private Marker marker; //used to control removal of friendFind marker instead of all markers
+    private boolean zoomToMyLocation = false; //one time variable - for use only when app starts, to prevent unwanted behaviour
+    private boolean firstTimeInvoked = true; //one time variable - used to prevent null pointer exceptions for some variables
+    private int init_zoom_level = 13; // used to control global zoom settings
     private String TAG = "glocate.view";
     private GoogleMap mMap; // Might be null if Google Play services APK is not available.
     private HeatmapTileProvider mHeatMapProvider;
     private TileOverlay mOverlay;
-    private List<LatLng> mInterstingPoints;
+    private List<LatLng> mInterestingPoints;
     private LatLng newlocation;
     private Geocoder gc;
+    public static final String PREFS_NAME = "MyPrefsFile"; //creates SharedPrefs file name for storing data
 
     // Option for heatmap
     // Create the gradient.
@@ -103,11 +96,11 @@ public class MapsActivity extends FragmentActivity implements
      */
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_maps);
-        setUpMapIfNeeded();
-        mMap.setMyLocationEnabled(true);
-        mSearch = (AutoCompleteTextView) findViewById(R.id.et_location);
+        super.onCreate(savedInstanceState); //required initiation function
+        setContentView(R.layout.activity_maps); //establishes UI layout
+        setUpMapIfNeeded(); //generates map view
+        mMap.setMyLocationEnabled(true); //sets your location on map
+        mSearch = (AutoCompleteTextView) findViewById(R.id.et_location); //basic identifier for AutoCompleteTextView in XML
 
         // Create a new global location parameters object
         mLocationRequest = LocationRequest.create();
@@ -126,103 +119,112 @@ public class MapsActivity extends FragmentActivity implements
          * handle callbacks.
          */
         mLocationClient = new LocationClient(this, this, this);
-        gc = new Geocoder(this);
+        gc = new Geocoder(this); // creates new Geocoder instance, to be used for finding coordinates from a name
     }
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
+        // lets Android know what to do when menu button is pressed
         MenuInflater inflater = getMenuInflater();
         inflater.inflate(R.menu.menu_file, menu);
         return true;
     }
 
     public boolean onOptionsItemSelected(MenuItem item) {
+        // this is invoked when menu options are selection
         switch (item.getItemId()) {
             case R.id.action_settings:
+                // if settings is invoked, perform this action
                 final Dialog settings_dialog = new Dialog(this);
                 settings_dialog.setContentView(R.layout.settings_dialog);
                 settings_dialog.setTitle("Settings");
-                settings_dialog.show();
-                Button OkayButton = (Button) settings_dialog.findViewById(R.id.Okay);
-                final CheckBox Checker = (CheckBox) settings_dialog.findViewById(R.id.checkbox);
+                settings_dialog.show(); //create settings dialog box with specified content view
+                Button OkayButton = (Button) settings_dialog.findViewById(R.id.Okay); //create button interface
+                final CheckBox Checker = (CheckBox) settings_dialog.findViewById(R.id.checkbox); //create checkbox interface
                 if (usingServerData){
-                    Checker.setChecked(true);
+                    Checker.setChecked(true); // if variable is true, it should continue to be true when user calls for dialog box again
                 }
                 OkayButton.setOnClickListener(new OnClickListener() {
+                    // if Okay button is clicked, perform this action
                     @Override
                     public void onClick(View v) {
                         Spinner mySpinner = (Spinner) settings_dialog.findViewById(R.id.spinner1);
-                        init_zoom_level = Integer.parseInt(mySpinner.getSelectedItem().toString().replaceAll("[^\\d]", ""));
-                        if (Checker.isChecked()){
+                        init_zoom_level = Integer.parseInt(mySpinner.getSelectedItem().toString().replaceAll("[^\\d]", "")); // set zoom level to user settings
+                        if (Checker.isChecked()){ // if user selects this option or if option is already selected
                             usingServerData = true;
                         }
                         else{
                             usingServerData = false;
                         }
-                        settings_dialog.dismiss();
+                        settings_dialog.dismiss(); //get rid of dialog box
                     }
                 });
                 break;
             case R.id.heatmap:
+                // if heatmap option is invoked, do this
                 toggleHeatMap();
+                // toggleHeatMap toggles boolean value of EnableHeatMap - EnableHeatMap turns heat map on and off.
                 if (HeatMapEnabled){
                     Toast.makeText(getApplicationContext(),
                             "Heat map enabled. Please wait a few minutes for changes to take effect.", Toast.LENGTH_LONG).show();
+                    // send toast to user letting him know what to expect.
                 }
                 else
                 {
                     Toast.makeText(getApplicationContext(),
                             "Heat map disabled. Please wait a few minutes for changes to take effect.", Toast.LENGTH_LONG).show();
+                    // send toast to user letting him know what to expect.
                 }
                 break;
             case R.id.friend_finder:
-                final Dialog friend_dialog = new Dialog(this);
-                friend_dialog.setContentView(R.layout.friendfinder);
+                // if friend finder option selected
+                final Dialog friend_dialog = new Dialog(this); 
+                friend_dialog.setContentView(R.layout.friendfinder); // set user interface for dialog box
                 friend_dialog.setTitle("Friend Finder");
-                friend_dialog.show();
-                Button searchButton = (Button) friend_dialog.findViewById(R.id.friend_search_btn);
-                final EditText edit = (EditText) friend_dialog.findViewById(R.id.friend_search);
+                friend_dialog.show(); // show dialog box
+                Button searchButton = (Button) friend_dialog.findViewById(R.id.friend_search_btn); //get access to button interface
+                final EditText edit = (EditText) friend_dialog.findViewById(R.id.friend_search); //get access to EditText interface
                 searchButton.setOnClickListener(new OnClickListener() {
+                    // if searchbutton is pressed, do this
                     @Override
                     public void onClick(View v) {
-                        final String phone_number = edit.getText().toString();
-                        findFriend(phone_number);
-                        friend_dialog.dismiss();
+                        final String phone_number = edit.getText().toString(); //get phone number
+                        findFriend(phone_number); //tell server to send back location of friend and display it
+                        friend_dialog.dismiss(); // get rid of dialog box
                     }
                 });
             default:
+                // otherwise, if nothing is pressed
                 break;
         }
         return true;
     }
 
     private void mapRandomizer(double latitude, double longitude) {
-        mInterstingPoints.clear();
-        float zoom = mMap.getCameraPosition().zoom;
+        // Generates random points - used for demonstration purposes. Returns a set of points within a fixed distance from you.
+        mInterestingPoints.clear(); //gets rid of mInterestingPoints array if already has data in it
+        float zoom = mMap.getCameraPosition().zoom; // parameter for distance function
         Log.d(TAG, "Zoom level is:" + zoom);
         for(int i=0; i< 100; i++) {
-            double lat = (Math.random()-0.5)/zoom/zoom+latitude;
-            double longi = (Math.random()-0.5)/zoom/zoom+longitude;
-            double distance_to_us = distance(lat,longi,latitude,longitude)*1.609344*1000;
-            if(distance_to_us <= 500)
-                mInterstingPoints.add(new LatLng(lat, longi));
+            double lat = (Math.random()-0.5)/zoom/zoom+latitude; //randomly generates latitudes
+            double longi = (Math.random()-0.5)/zoom/zoom+longitude; // randomly generates longitudes
+            double distance_to_us = distance(lat,longi,latitude,longitude)*1.609344*1000; //calculates distance to lat/lng coordinates 
+            if(distance_to_us <= 500) //self-explanatory
+                mInterestingPoints.add(new LatLng(lat, longi));
         }
     }
 
 
-    private void addRandmoHeatMap (double latitude, double longitude) {
+    private void addRandomHeatMap (double latitude, double longitude) {
         // Get the data: latitude/longitude positions.
         // Create a heat map tile provider.
-        // Get the data: latitude/longitude positions.
-        // Create a heat map tile provider.
-        if (HeatMapEnabled) {
-            if (!usingServerData){
-                mapRandomizer(latitude, longitude);
+        if (HeatMapEnabled) { // if user wants heatmap
+            if (!usingServerData){ //and if user doesn't care about only showing data from server
+                mapRandomizer(latitude, longitude); //randomly generate points instead - if usingServerData is true, we don't do this.
             }
-            if (mInterstingPoints.size() != 0) {
-                Log.d(TAG, "Moo! " + TextUtils.join(", ", mInterstingPoints));
+            if (mInterestingPoints.size() != 0) {
                 mHeatMapProvider = new HeatmapTileProvider.Builder()
-                        .data(mInterstingPoints)
+                        .data(mInterestingPoints)
                         .gradient(gradient)
                         .build();
                 // Add a tile overlay to the map, using the heat map tile provider.
@@ -230,7 +232,7 @@ public class MapsActivity extends FragmentActivity implements
                 if (mOverlay != null) mOverlay.remove();
                 mOverlay = mMap.addTileOverlay(new TileOverlayOptions().tileProvider(mHeatMapProvider));
             }
-        } else {
+        } else { //is heatmap is disabled, get rid of last heatmap
             if (mOverlay != null) {
                 mOverlay.remove();
             }
@@ -238,24 +240,22 @@ public class MapsActivity extends FragmentActivity implements
     }
 
     private void findFriend(final String phone_num) {
-        RequestParams params = new RequestParams();
-        MyFuckingClient.get("find/" + phone_num, params, new JsonHttpResponseHandler() {
+        // findFriend finds your friend's location and shows his location on a map for you
+        RequestParams params = new RequestParams(); //required
+        MyClient.get("find/" + phone_num, params, new JsonHttpResponseHandler() {
+            // if GET call was successful
             @Override
             public void onSuccess(int statusCode, Header[] headers, JSONObject jsonobj) {
                 // Pull out the first event on the public timeline
-                Log.d(TAG, "FindFriend - Posting route success array");
-                Log.d(TAG, String.valueOf(jsonobj));
                 try {
                     double lat = Double.parseDouble((jsonobj.get("latitude").toString()));
                     double lon = Double.parseDouble(jsonobj.get("longitude").toString());
-                    LatLng newcoordinate = new LatLng(lat, lon);
-                    Log.d(TAG, "Friend! " + newcoordinate.toString());
+                    LatLng newcoordinate = new LatLng(lat, lon); //create new coordinate from JSONOBJ data
                     //add marker + change location
-                    CameraUpdate newLocation = CameraUpdateFactory.newLatLngZoom(newcoordinate, init_zoom_level);
+                    CameraUpdate newLocation = CameraUpdateFactory.newLatLngZoom(newcoordinate, init_zoom_level); // zoom to new location
                     zoomToMyLocation = false;
                     if (!zoomToMyLocation) {
                         mMap.animateCamera(newLocation);
-                        //mMap.clear();
                         marker = mMap.addMarker(new MarkerOptions()
                                 .position(newcoordinate)
                                 .draggable(false));
@@ -263,13 +263,13 @@ public class MapsActivity extends FragmentActivity implements
                     }
                 } catch (JSONException e) {
                     e.printStackTrace();
-                    Log.d(TAG, "JSON EXCEPTION T T");
                 }
             }
+            // if no such phone number exists, do this
             public void onFailure(int statusCode, Header[] headers, String jsonresponse, Throwable throwable) {
-                Log.d(TAG, "Friendly fire! Friendly fire!");
                 Toast.makeText(getApplicationContext(),
                         "No friend with that number in database", Toast.LENGTH_LONG).show();
+                // let user know what just happened
             }
         });
 
@@ -278,30 +278,18 @@ public class MapsActivity extends FragmentActivity implements
 
 
     private void readList(final Location location) {
-        RequestParams params = new RequestParams();
-        //params.put("phone", "5129037891"); // use "5129037891" or Danny's number
-        //params.put("name", "DL");
-        //params.put("email", "ljy1681@gmail.com");
-        //params.put("longitude", location.getLatitude());
-        //params.put("latitude", location.getLongitude());
-        MyFuckingClient.get("around/me", params, new JsonHttpResponseHandler() {
+        // gets all data points from server. Does not depend on current location.
+        RequestParams params = new RequestParams(); //required for MyClient
+        MyClient.get("around/me", params, new JsonHttpResponseHandler() {
+            // if GET from server is successful (i.e. page exists, which it always does)
             @Override
             public void onSuccess(int statusCode, Header[] headers, JSONArray jsonArr) {
                 // Pull out the first event on the public timeline
-                Log.d(TAG, "Posting route success array");
-                Log.d(TAG, String.valueOf(jsonArr));
                 try {
-                    mInterstingPoints = parseList(jsonArr);
-                    //if (firstTimeInvoked) {
-                    //    addRandmoHeatMap(location.getLatitude(), location.getLongitude());
-                    //}
-                    //else {
-                        addRandmoHeatMap(newlocation.latitude, newlocation.longitude);
-                    //}
-                    Log.d(TAG, "Bubble! " + TextUtils.join(", ", mInterstingPoints));
+                    mInterestingPoints = parseList(jsonArr); //set this variable to all the points in jsonArr
+                    addRandomHeatMap(newlocation.latitude, newlocation.longitude); //random heat map is now activated, centered at appropriate lat/lng
                 } catch (JSONException e) {
                     e.printStackTrace();
-                    Log.d(TAG, "JSON EXCEPTION T T");
                 }
             }
         });
@@ -309,20 +297,20 @@ public class MapsActivity extends FragmentActivity implements
     }
 
     public List<LatLng> parseList(JSONArray arr) throws JSONException {
+        // tells Java how to parse through jsonArray for our data points
         List<LatLng> list = new ArrayList<LatLng>();
         for(int i = 0; i < arr.length(); i++){
             JSONObject jsonobj = arr.getJSONObject(i);
             double lat, longi;
             lat = Double.parseDouble((jsonobj.get("latitude").toString()));
             longi = Double.parseDouble(jsonobj.get("longitude").toString());
-            Log.d(TAG, i + "th " + " lat " + String.valueOf(lat) + " longi " + String.valueOf(longi));
             list.add(new LatLng(lat, longi));
         }
-        Log.d(TAG, "Meow! " + TextUtils.join(", ", list));
         return list;
     }
 
     public boolean toggleHeatMap() {
+        // changes boolean value of HeatMapEnabled
         return HeatMapEnabled = !HeatMapEnabled;
     }
     /*
@@ -376,6 +364,7 @@ public class MapsActivity extends FragmentActivity implements
         } else {
 
             // If no resolution is available, display a dialog to the user with the error.
+            // Was never implemented, and was unnecessary.
         }
     }
 
@@ -461,50 +450,47 @@ public class MapsActivity extends FragmentActivity implements
      */
     @Override
     public void onLocationChanged(Location location) {
-        // invoked once, when you open map for the first time.
-            postMyLocation(location.getLongitude(),location.getLatitude());
-            Log.d(TAG, "Woof! " + " long " + location.getLongitude() + " lat " + location.getLatitude());
+        // invoked periodically. Basically sets camera to zoom in on your location at start, then restricts itself to pulling data points from server and sending your location to server.
+            postMyLocation(location.getLongitude(),location.getLatitude()); //posts your location to server
             LatLng coordinate = new LatLng(location.getLatitude(), location.getLongitude());
             if (firstTimeInvoked){
-               newlocation = coordinate;
+               newlocation = coordinate; //sets global variable to this if app has just been started.
             }
-            CameraUpdate yourLocation = CameraUpdateFactory.newLatLngZoom(coordinate, 15);
+            CameraUpdate yourLocation = CameraUpdateFactory.newLatLngZoom(coordinate, init_zoom_level);
             if (!zoomToMyLocation) {
-                mMap.animateCamera(yourLocation);
+                mMap.animateCamera(yourLocation); // actually forces camera to move to newlocation
                 zoomToMyLocation = true;
             }
-
-            Log.d(TAG, "Zoom in at latitude:" + coordinate.latitude + ", longitude: " + coordinate.longitude);
-            Log.d(TAG, "Reloading heatmap");
-            readList(location);
+            readList(location); //gets all data from server
         }
 
     public void commitSearch(View button1){
-        //When button is pressed, it performs this action.
+        //When find button is pressed in search bar, it performs this action.
         String address = mSearch.getText().toString();
         try {
-            final List<Address> foundAddresses = gc.getFromLocationName(address, 5); // Search addresses
-            if (foundAddresses == null || foundAddresses.isEmpty()) {
+            final List<Address> foundAddresses = gc.getFromLocationName(address, 5); // Searches and returns list of upto 5 addresses.
+            if (foundAddresses == null || foundAddresses.isEmpty()) { //if no results were found
                 Toast.makeText(getApplicationContext(),
                         "Address does not exist", Toast.LENGTH_LONG).show();
+                // let user know what happened
             } else {
-                AlertDialog.Builder alertDialogbuilder = new AlertDialog.Builder(this);
+                AlertDialog.Builder alertDialogbuilder = new AlertDialog.Builder(this); //create suggestions dialog box
                 alertDialogbuilder.setTitle("Pick your location");
-                final CharSequence[] dynamite = parseResults(foundAddresses);
-                alertDialogbuilder.setItems(parseResults(foundAddresses), new DialogInterface.OnClickListener() {
-                    public void onClick(DialogInterface dialog, int which) {
-                        mSearch.setText(dynamite[which]);
+                final CharSequence[] dynamite = parseResults(foundAddresses); //creates list of options
+                alertDialogbuilder.setItems(parseResults(foundAddresses), new DialogInterface.OnClickListener() { //shows options in dialog box
+                    public void onClick(DialogInterface dialog, int which) { //if an item is pressed (item location is given by int which, which tells index of item selected)
+                        mSearch.setText(dynamite[which]); //change autocomplete text view to read the results of selection
                         try{
                             Address firstresult = foundAddresses.get(which);
-                            LatLng newcoordinate = new LatLng(firstresult.getLatitude(), firstresult.getLongitude());
+                            LatLng newcoordinate = new LatLng(firstresult.getLatitude(), firstresult.getLongitude()); //finds coordinates of selection
                             firstTimeInvoked = false;
-                            newlocation = newcoordinate;
-                            CameraUpdate newLocation = CameraUpdateFactory.newLatLngZoom(newcoordinate, init_zoom_level);
+                            newlocation = newcoordinate; //updates global variable for other functions
+                            CameraUpdate newLocation = CameraUpdateFactory.newLatLngZoom(newcoordinate, init_zoom_level); //changes view to new location
                             zoomToMyLocation = false;
                             if (!zoomToMyLocation) {
                                 mMap.animateCamera(newLocation);
-                                mMap.clear();
-                                mMap.addMarker(new MarkerOptions()
+                                mMap.clear(); //gets rid of all markers, including friends
+                                mMap.addMarker(new MarkerOptions() //adds a marker
                                         .position(newcoordinate)
                                         .title(dynamite[which].toString())
                                         .draggable(false));
@@ -517,7 +503,7 @@ public class MapsActivity extends FragmentActivity implements
                     }
                 });
                 AlertDialog alertDialog2 = alertDialogbuilder.create();
-                alertDialog2.show();
+                alertDialog2.show(); //show above alert dialog
             }
         }
         catch (Exception e)
@@ -527,9 +513,10 @@ public class MapsActivity extends FragmentActivity implements
     }
 
     public CharSequence[] parseResults (List<Address> listable){//should return CharSequence
-        // parse list of address to form a coherent character sequence for alert dialog box
+        // parse list of address to form a coherent character sequence for suggestions box
+        // result is a description of the address that ordinary hummans can understand
         ArrayList<String> cutelist = new ArrayList<String>();
-        for(int i = 0; i < listable.size(); i++) {
+        for(int i = 0; i < listable.size(); i++) { //could be made more efficient, but oh well.
             Address Cool = listable.get(i);
             String sum = "";
             for (int j = 0;true;j++) {
@@ -591,27 +578,31 @@ public class MapsActivity extends FragmentActivity implements
 
 
     private void postMyLocation(double longitude, double latitude) {
+        // responsible for posting your location to the server
         RequestParams params = new RequestParams();
-        Intent intent = getIntent();
-        String mPhoneNumber = intent.getStringExtra("mPhoneNumber");
-        String mName = intent.getStringExtra("mName");
+        SharedPreferences shared = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
+        Intent intent = getIntent(); //gets data from login screen app
+        // Original intent based activity
+        //String mPhoneNumber = intent.getStringExtra("mPhoneNumber");
+        //String mName = intent.getStringExtra("mName");
+        String mPhoneNumber = shared.getString("mPhoneNumber","");
+        String mName = shared.getString("mName","");
         params.put("phone", mPhoneNumber);
         params.put("name", mName);
         params.put("email", "ljy1681@gmail.com");
         params.put("longitude", longitude);
         params.put("latitude", latitude);
-        MyFuckingClient.post("about/me", params, new JsonHttpResponseHandler() {
+        MyClient.post("about/me", params, new JsonHttpResponseHandler() { //posts to the server
             @Override
             public void onSuccess(int statusCode, Header[] headers, JSONObject response) {
                 // If the response is JSONObject instead of expected JSONArray
-                Log.d(TAG, "Fucking yeah.");
-                Log.d(TAG, String.valueOf(response));
+                // does nothing however
             }
 
             @Override
             public void onSuccess(int statusCode, Header[] headers, JSONArray timeline) {
                 // Pull out the first event on the public timeline
-                Log.d(TAG, "Fuking yeah.");
+                // does nothing however
             }
         });
     }
@@ -654,6 +645,8 @@ public class MapsActivity extends FragmentActivity implements
 
 
     private double distance(double lat1, double lon1, double lat2, double lon2) {
+        // determines distance between your current location and the another pair of coordinates
+        // used in random heat map generation
         double theta = lon1 - lon2;
         double dist = Math.sin(deg2rad(lat1)) * Math.sin(deg2rad(lat2)) + Math.cos(deg2rad(lat1)) * Math.cos(deg2rad(lat2)) * Math.cos(deg2rad(theta));
         dist = Math.acos(dist);
