@@ -29,7 +29,9 @@ An app that measures how many people there are at places, equipped with filters 
 
 - App can make requests for data from server, and display it in user-friendly fashion.
 
+#Results
 
+See results [here](http://www.akshatm.com/images/g-locate.pdf).
 
 
 
